@@ -36,7 +36,7 @@ npm run typecheck
 npm run test:integration
 ```
 
-The integration test requires `ffmpeg` and `ffprobe` on PATH. It renders the real example to a temporary file, checks H.264, dimensions, rate, frame count, duration and absent audio, then samples decoded frames at raised/lowered arm positions for all three waves. It removes temporary output afterward.
+The integration test uses the platform-specific FFmpeg and ffprobe bundled with Remotion; no system installation or PATH changes are needed. It renders the real example to a temporary file, checks H.264, dimensions, rate, frame count, duration and absent audio, then samples decoded frames at raised/lowered arm positions for all three waves. It removes temporary output afterward. The bundled FFmpeg has fewer filters and muxers than a full installation; frame sampling uses `trim` and raw RGB through `image2pipe`.
 
 ## Agent Skills
 
@@ -48,9 +48,25 @@ The three `skills/*/SKILL.md` entrypoints have Agent Skills YAML frontmatter:
 
 Keep this checkout available to the agent and load the relevant SKILL.md, or copy the corresponding directory into the agent's supported skill directory. Commands run from this repository root. Do not copy only SKILL.md from `animate`: its references directory is required. See the [Agent Skills specification](https://agentskills.io/specification) for compatible hosts.
 
-## Verification status in this checkout
+## Phase 1.5 environment verification
 
-Dependencies are installed and `package-lock.json` is present. Full `npm run typecheck`, all seven unit tests, and the validation CLI pass. Rendering successfully bundles the renderer but cannot finish inside the current sandbox: local server binding is denied (`EPERM :3000`) and Chromium download fails with `ENOTFOUND storage.googleapis.com`. No `output/wave.mp4` is claimed. Run the render command in a terminal with local server access and network access for the initial Chromium download. Video metadata/frame checks and a separately installed agent workflow still need verification. Phase 1 remains incomplete until these checks succeed.
+Verified on 2026-10-27 with macOS arm64, Node.js 22.23.4, Remotion 4.0.373 and bundled FFmpeg/ffprobe n7.1:
+
+- Validation, all seven unit tests and TypeScript checks pass.
+- Inside the sandbox, render reproduces `listen EPERM :::3000`. A plain Node TCP server also fails with `EPERM` on both `::` and `127.0.0.1`, using an automatically assigned port. This establishes a sandbox network binding restriction, independent of Remotion configuration or port availability. Remotion's static server selects ports starting at 3000.
+- The same render command succeeds with explicitly approved execution beyond the sandbox restriction. Chromium is already cached; no browser download or package installation was needed in this run.
+- The original integration test fails with `spawnSync ffprobe ENOENT` because system binaries are absent from PATH. The test now resolves Remotion's bundled binaries and supplies their adjacent library directory on macOS. Directly launching those binaries without this environment fails to load `libavdevice.dylib`.
+- Integration passes with a real render: H.264, 1280×720, 24 FPS, 72 frames, 3 seconds, no audio; decoded pixel checks confirm three arm raises at frames 12, 36 and 60, with lowered-arm checks at 0, 24 and 48.
+- `output/wave.mp4` already existed and was preserved. A fresh export at `output/wave-phase1.5.mp4` has identical SHA-256: `c19e26bb723831b470dfb58a38a7544e5ac60af86f2cc03041a68383236480f7`. Both files have the expected metadata. Generated videos are gitignored.
+
+No animation runtime, character assets, timeline or security validation changed. Rendering still requires local server and browser process permission; request approval from the host when blocked, and stop if denied. Changing ports or forcing IPv4 does not resolve this sandbox restriction.
+
+For portability between projects:
+
+- Use Node.js 22+ and `npm ci` with the committed lockfile; keep all Remotion package versions aligned and install platform optional dependencies.
+- Keep the runtime, renderer, scripts and required skill references available together. Run commands from this repository root with project/output arguments; copying a skill alone does not install its executable tools.
+- Reuse Remotion's platform binary resolution instead of machine paths or a required global FFmpeg installation. The integration helper uses `RenderInternals` from the pinned version; rerun integration when upgrading Remotion.
+- Provision Chromium and its OS libraries during environment setup, with authorized network access for a first download, then retain its cache. This run did not test a clean-cache download, Linux/Windows, or a separately installed agent workflow.
 
 The npm scripts use `node --import tsx` to avoid the IPC listener created by the standalone tsx CLI.
 
