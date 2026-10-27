@@ -52,7 +52,7 @@ export async function loadProject(project: string) {
   return {character, timeline, assets};
 }
 export function cli(render = false) {
-  const {values} = parseArgs({options: {project: {type: 'string'}, ...(render ? {output: {type: 'string' as const}} : {})}, strict: true});
+  const {values} = parseArgs({options: {project: {type: 'string'}, ...(render ? {output: {type: 'string' as const}, 'browser-executable': {type: 'string' as const}} : {})}, strict: true});
   if (!values.project || (render && !values.output)) throw new Error(`Usage: --project <directory>${render ? ' --output <file.mp4>' : ''}`);
-  return {project: values.project, output: values.output as string};
+  return {project: values.project, output: values.output as string, browserExecutable: values['browser-executable'] as string | undefined};
 }

@@ -1,0 +1,40 @@
+import assert from 'node:assert/strict';
+import {execFileSync, spawnSync} from 'node:child_process';
+import {cp, mkdir, mkdtemp, realpath, writeFile} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import path from 'node:path';
+
+const root = await realpath('.');
+if (process.platform !== 'darwin') throw new Error('Checkout-denial test currently requires macOS sandbox-exec; run equivalent filesystem isolation on other platforms.');
+const dir = await mkdtemp(path.join(tmpdir(), 'animation-package-'));
+console.log(`Standalone test project: ${dir}`);
+const cache = path.join(dir, '.npm-cache');
+await mkdir('output', {recursive: true});
+const [packed] = JSON.parse(execFileSync('npm', ['pack', '--json', '--pack-destination', 'output', '--cache', cache], {encoding: 'utf8'}));
+for (const required of ['bin/animation-maker.mjs', 'renderer/src/index.ts', 'packages/animation-runtime/src/schemas/index.ts', 'scripts/environment.ts']) {
+  assert.ok(packed.files.some((file: {path: string}) => file.path === required), `Missing package file: ${required}`);
+}
+await writeFile(path.join(dir, 'package.json'), JSON.stringify({name: 'standalone-animation-test', private: true, type: 'module'}));
+execFileSync('npm', ['install', '--save-dev', path.join(root, 'output', packed.filename), '--ignore-scripts', '--no-audit', '--no-fund', '--cache', cache], {cwd: dir, stdio: 'inherit'});
+const installed = path.join(dir, 'node_modules/@gas-nontachai/animation-maker');
+assert.ok(!(await realpath(installed)).startsWith(root + path.sep));
+const cli = path.join(dir, 'node_modules/.bin/animation-maker');
+const missing = spawnSync(process.execPath, [cli, 'doctor'], {cwd: dir, encoding: 'utf8'});
+assert.notEqual(missing.status, 0);
+assert.match(missing.stderr, /Chromium is not installed/);
+console.log('Clean installation: doctor reports missing Chromium without downloading it.');
+execFileSync('npm', ['exec', '--yes', '--package=skills@1.7.4', '--cache', cache, '--', 'skills', 'add', installed, '--agent', 'codex', '--yes', '--copy'], {cwd: dir, stdio: 'inherit'});
+await cp(path.join(installed, 'examples/waving-character'), path.join(dir, 'example'), {recursive: true});
+// Provision the already approved browser cache; no browser download or checkout lookup is allowed in the isolated run.
+await cp('node_modules/.remotion', path.join(dir, 'node_modules/.remotion'), {recursive: true});
+await cp('tests/check-video.mjs', path.join(dir, 'check-video.mjs'));
+await cp('tests/installed-package.mjs', path.join(dir, 'installed-package.mjs'));
+const profile = `(version 1)(allow default)(deny file-read* (subpath ${JSON.stringify(root)}))`;
+const env = {...process.env};
+delete env.NODE_PATH;
+delete env.NODE_OPTIONS;
+execFileSync('sandbox-exec', ['-p', profile, process.execPath, 'installed-package.mjs', root], {cwd: dir, env, stdio: 'inherit'});
+await cp(path.join(dir, 'wave.mp4'), 'output/wave-standalone.mp4');
+const evidence = {package: packed.filename, integrity: packed.integrity, isolatedProject: dir, checkoutDenied: true, skills: ['animate', 'create-character', 'render-video'], result: 'PASS'};
+await writeFile('output/phase1.6-evidence.json', JSON.stringify(evidence, null, 2) + '\n');
+console.log(`Package test PASS. Evidence: output/phase1.6-evidence.json; video: output/wave-standalone.mp4. Temporary project retained at ${dir}`);
