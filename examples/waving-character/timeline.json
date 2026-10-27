@@ -1,0 +1,49 @@
+{
+  "version": "1.0",
+  "characterId": "boy-01",
+  "fps": 24,
+  "duration": 3,
+  "tracks": [
+    {
+      "target": "right-arm",
+      "property": "rotation",
+      "keyframes": [
+        {
+          "time": 0,
+          "value": 0,
+          "easing": "easeInOut"
+        },
+        {
+          "time": 0.5,
+          "value": -150,
+          "easing": "easeInOut"
+        },
+        {
+          "time": 1,
+          "value": 0,
+          "easing": "easeInOut"
+        },
+        {
+          "time": 1.5,
+          "value": -150,
+          "easing": "easeInOut"
+        },
+        {
+          "time": 2,
+          "value": 0,
+          "easing": "easeInOut"
+        },
+        {
+          "time": 2.5,
+          "value": -150,
+          "easing": "easeInOut"
+        },
+        {
+          "time": 3,
+          "value": 0,
+          "easing": "easeInOut"
+        }
+      ]
+    }
+  ]
+}
