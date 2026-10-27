@@ -1,12 +1,25 @@
 import {createServer} from 'node:net';
+import {access, stat} from 'node:fs/promises';
+import {constants} from 'node:fs';
 import {ensureBrowser} from '@remotion/renderer';
 
 export async function browser(browserExecutable?: string, download = false) {
-  const status = await ensureBrowser({browserExecutable, onBrowserDownload: () => {
-    if (!download) throw new Error('Chromium is not installed. With approval, run animation-maker doctor --download-browser, or pass --browser-executable <path>.');
-    return {onProgress: () => {}, version: null};
-  }});
-  if (status.type === 'no-browser') throw new Error('Chromium setup failed');
+  let status: Awaited<ReturnType<typeof ensureBrowser>>;
+  try {
+    status = await ensureBrowser({browserExecutable, ...(download ? {} : {onBrowserDownload: () => {
+      throw new Error('Chromium is not installed. With approval, run animation-maker doctor --download-browser, or pass --browser-executable <path>.');
+    }})});
+  } catch (error) {
+    throw new Error(`Chromium ${download ? 'installation' : 'resolution'} failed: ${(error as Error).message}. Check the browser path and cache permissions${download ? ', and network access for the download' : ''}; alternatively pass --browser-executable <path> to an installed Chromium.`, {cause: error});
+  }
+  // Remotion 4.0.373 can skip downloading an incomplete cache directory and still return no-browser.
+  if (status.type === 'no-browser') throw new Error('Chromium installation produced no executable. An incomplete Remotion browser cache may be present: move aside this project\'s node_modules/.remotion/chrome-headless-shell cache, then retry animation-maker doctor --download-browser with approval. Alternatively pass --browser-executable <path>.');
+  try {
+    if (!(await stat(status.path)).isFile()) throw new Error('path is not a file');
+    await access(status.path, constants.X_OK);
+  } catch (error) {
+    throw new Error(`Chromium executable is not usable at ${status.path}: ${(error as Error).message}. Check file permissions or pass --browser-executable <path> to an executable Chromium.`, {cause: error});
+  }
   return status.path;
 }
 

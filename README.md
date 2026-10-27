@@ -4,7 +4,7 @@ Local-first TypeScript tools and Agent Skills for assembling SVG parts, evaluati
 
 ## Install in any project
 
-Requires Node.js 22+ and npm. `@gas-nontachai/animation-maker@1.0.0` is a provisional package name/version; it has **not been published by this workflow**. The package remains private to prevent accidental publication. Install the local artifact today:
+Requires Node.js 22+ and npm. `@gas-nontachai/animation-maker@1.0.0` is a provisional package name/version; it has **not been published by this workflow**. Install the local artifact today:
 
 ```sh
 npm install -D /path/to/gas-nontachai-animation-maker-1.0.0.tgz
@@ -42,6 +42,10 @@ npx --no-install animation-maker doctor --download-browser
 
 Alternatively pass `--browser-executable <path>` to doctor and render for an already installed compatible Chromium. No machine-specific path is stored in the package. The browser cache belongs to the calling project (`node_modules/.remotion`), and required Chromium OS libraries must be available, especially on Linux. Render never downloads Chromium implicitly.
 
+Chromium bootstrap uses only the public `ensureBrowser()` API. In pinned Remotion 4.0.373 its implementation and declarations return `Promise<BrowserStatus>` (including an executable path on success), not `void`. With `--download-browser`, Remotion's default progress reporter displays the download; without it, the callback refuses a download before network access. Doctor and render share this resolution and check that the resolved path is an executable file.
+
+If setup reports an incomplete cache, Remotion 4.0.373 may have found a platform cache directory without its executable and skipped downloading. Move aside the affected project's `node_modules/.remotion/chrome-headless-shell` directory, then retry `doctor --download-browser` with approval, or use `--browser-executable`. The CLI deliberately does not delete browser caches. That recovery directory is specific to the pinned Remotion cache layout; bootstrap itself does not import cache or browser internals. Network/download failures retain the original error and point to network/cache permissions and the explicit executable alternative.
+
 Rendering requires permission to bind a local HTTP server and launch headless Chromium. In a restricted Codex sandbox, `listen EPERM` is an environment limitation: request host approval for the command and stop if permission is denied. Do not disable sandbox or SVG/path checks. Phase 1.5 reproduced this with plain Node servers on IPv4 and IPv6; the same renderer worked with authorized execution. Changing ports does not fix a binding prohibition. Browser download errors need network permission separately.
 
 If FFmpeg/ffprobe fail, reinstall platform optional dependencies from the package lock; do not copy binaries from another OS or assume a global installation. Remotion ships a reduced FFmpeg build and macOS requires its adjacent shared libraries. The test helper uses Remotion's pinned binary resolver and library environment. Rerun package/integration tests when upgrading Remotion, including any use of `RenderInternals`.
@@ -78,7 +82,7 @@ npm run test:package
 
 `test:integration` preserves the original metadata and pixel checks, using bundled FFmpeg/ffprobe rather than system binaries. Frame sampling uses `trim` and raw RGB through `image2pipe`, supported by the reduced bundled FFmpeg.
 
-`test:package` requires authorized network access to install the tarball's dependencies and skills CLI 1.7.4, and authorized local server/browser execution. It packs the actual artifact, installs it without lifecycle scripts into a fresh temporary project, and uses the real skills installer to copy all three Skills into `.agents/skills/`. It verifies that an empty browser cache is reported without an implicit download, then copies the already provisioned browser cache for the rendering test. This proves independence from the checkout; it does not test a fresh browser download.
+`test:package` requires authorized network access to install the tarball's dependencies, skills CLI 1.7.4 and Chromium, and authorized local server/browser execution. It packs the actual artifact, installs it without lifecycle scripts into a fresh temporary project, and uses the real skills installer to copy all three Skills into `.agents/skills/`. It verifies missing-browser and incomplete-cache errors, then explicitly downloads Chromium with `doctor --download-browser` while checkout reads are denied. The downloaded executable is reused by doctor and render; no browser cache is copied from the checkout. Unit tests cover opt-in enforcement, installation success/failure and executable validation.
 
 On macOS the test applies an additional `sandbox-exec` policy denying all reads under the original checkout. The isolated process asserts that reading the checkout's package.json fails, then runs installed CLI doctor, validation, render, metadata/pixel checks and overwrite protection. No original directory is renamed or hidden. It retains the temporary project for inspection and writes the tarball, `wave-standalone.mp4` and `phase1.6-evidence.json` under gitignored `output/`. The isolation harness currently requires macOS; an equivalent checkout-denial test is needed before claiming Linux/Windows verification.
 

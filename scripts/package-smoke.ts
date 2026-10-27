@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {execFileSync, spawnSync} from 'node:child_process';
-import {cp, mkdir, mkdtemp, realpath, writeFile} from 'node:fs/promises';
+import {cp, mkdir, mkdtemp, realpath, rename, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 
@@ -23,10 +23,15 @@ const missing = spawnSync(process.execPath, [cli, 'doctor'], {cwd: dir, encoding
 assert.notEqual(missing.status, 0);
 assert.match(missing.stderr, /Chromium is not installed/);
 console.log('Clean installation: doctor reports missing Chromium without downloading it.');
+const browserCache = path.join(dir, 'node_modules/.remotion/chrome-headless-shell');
+await mkdir(path.join(browserCache, process.arch === 'arm64' ? 'mac-arm64' : 'mac-x64'), {recursive: true});
+const incomplete = spawnSync(process.execPath, [cli, 'doctor', '--download-browser'], {cwd: dir, encoding: 'utf8'});
+assert.equal(incomplete.status, 1);
+assert.match(incomplete.stderr, /incomplete Remotion browser cache.*doctor --download-browser/);
+await rename(browserCache, `${browserCache}-incomplete-test-fixture`);
+console.log('Incomplete-cache regression: actionable error, then moved test fixture aside for fresh bootstrap.');
 execFileSync('npm', ['exec', '--yes', '--package=skills@1.7.4', '--cache', cache, '--', 'skills', 'add', installed, '--agent', 'codex', '--yes', '--copy'], {cwd: dir, stdio: 'inherit'});
 await cp(path.join(installed, 'examples/waving-character'), path.join(dir, 'example'), {recursive: true});
-// Provision the already approved browser cache; no browser download or checkout lookup is allowed in the isolated run.
-await cp('node_modules/.remotion', path.join(dir, 'node_modules/.remotion'), {recursive: true});
 await cp('tests/check-video.mjs', path.join(dir, 'check-video.mjs'));
 await cp('tests/installed-package.mjs', path.join(dir, 'installed-package.mjs'));
 const profile = `(version 1)(allow default)(deny file-read* (subpath ${JSON.stringify(root)}))`;

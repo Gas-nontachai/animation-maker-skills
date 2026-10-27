@@ -13,6 +13,9 @@ for (const skill of ['animate', 'create-character', 'render-video']) {
 assert.ok(readFileSync('.agents/skills/animate/references/timeline-spec.md', 'utf8').includes('Timeline v1.0'));
 const cli = 'node_modules/.bin/animation-maker';
 const run = (...args) => execFileSync(process.execPath, [cli, ...args], {stdio: 'inherit'});
+const bootstrap = execFileSync(process.execPath, [cli, 'doctor', '--download-browser'], {encoding: 'utf8'});
+process.stdout.write(bootstrap);
+assert.match(bootstrap, /Downloading Chrome Headless Shell/);
 run('doctor');
 run('validate', '--project', './example');
 run('render', '--project', './example', '--output', './wave.mp4');
