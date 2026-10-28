@@ -28,6 +28,13 @@ const bootstrap = {
 };
 const externalMetadata = {name: metadata.name, version: bootstrap.version, dist: {integrity: bootstrap.integrity}};
 const externalInput = {head, initialVersion: '1.1.0', versions: {'1.2.0': externalMetadata}, tags: {}, commits: []};
+const rebaseline = {
+  repository: 'Gas-nontachai/animation-maker-skills', existingVersion: '1.1.0', targetVersion: '1.1.1', commit: head,
+};
+const legacyMetadata = {name: metadata.name, version: '1.1.0', dist: {integrity: bootstrap.integrity}};
+const rebaselineInput = {
+  head, initialVersion: '1.1.0', versions: {'0.0.0-stage': {}, '1.1.0': legacyMetadata}, tags: {}, commits: [], rebaseline,
+};
 
 describe('version planning', () => {
   it.each([
@@ -121,6 +128,123 @@ describe('version planning', () => {
     expect(() => verifyReleaseBase({previousVersion: '1.1.0'}, {'1.1.0': {}, '1.1.1': {}})).toThrow('advanced');
     expect(() => verifyReleaseBase({previousVersion: null}, {})).not.toThrow();
     expect(() => verifyReleaseBase({previousVersion: null}, {'1.1.0': {}})).toThrow('advanced');
+  });
+});
+
+describe('one-time release rebaseline', () => {
+  it('requires opt-in and publishes only 1.1.1 without claiming a legacy source baseline', () => {
+    expect(() => resolvePlan({...rebaselineInput, rebaseline: undefined})).toThrow('baseline');
+    expect(resolvePlan(rebaselineInput)).toEqual({
+      name: metadata.name, head, action: 'rebaseline', version: '1.1.1',
+      baseline: null, previousVersion: '1.1.0', rebaseline,
+    });
+  });
+
+  it.each([
+    {...rebaseline, repository: 'someone/other'},
+    {...rebaseline, existingVersion: '1.0.0'},
+    {...rebaseline, targetVersion: '1.2.0'},
+    {...rebaseline, commit: base},
+    {...rebaseline, commit: 'prod'},
+    {...rebaseline, extra: true},
+  ])('rejects non-exact authorization %j', authorization => {
+    expect(() => resolvePlan({...rebaselineInput, rebaseline: authorization})).toThrow('Rebaseline');
+  });
+
+  it('rejects missing/changed registry state, existing tags and conflicting bootstrap authorization', () => {
+    for (const versions of [
+      {},
+      {'1.0.0': {...legacyMetadata, version: '1.0.0'}, ...rebaselineInput.versions},
+      {...rebaselineInput.versions, '1.2.0': metadata},
+      {'1.1.0': {...legacyMetadata, name: 'another-package'}},
+      {'1.1.0': {...legacyMetadata, version: '1.0.0'}},
+      {'1.1.0': {...legacyMetadata, gitHead: base}},
+      {...rebaselineInput.versions, '1.1.1': {}},
+    ]) expect(() => resolvePlan({...rebaselineInput, versions})).toThrow();
+    for (const tags of [{'v1.1.0': base}, {'v1.1.1': head}]) {
+      expect(() => resolvePlan({...rebaselineInput, tags})).toThrow('Rebaseline');
+    }
+    expect(() => resolvePlan({...rebaselineInput, bootstrap})).toThrow('combined');
+  });
+
+  it('recovers an interrupted new release without republishing, then resumes normal versioning', () => {
+    const published = {...metadata, version: '1.1.1'};
+    const input = {...rebaselineInput, versions: {...rebaselineInput.versions, '1.1.1': published}};
+    expect(resolvePlan(input)).toMatchObject({action: 'recover', version: '1.1.1', head});
+    const tagged = {...input, tags: {'v1.1.1': head}};
+    expect(resolvePlan(tagged).action).toBe('skip');
+    expect(resolvePlan({...tagged, rebaseline: undefined, commits: [runtime('fix: next')]}))
+      .toMatchObject({action: 'publish', version: '1.1.2', baseline: head});
+  });
+
+  it.each(['publish', 'changed authorization', 'revoked authorization', 'wrong checkout', 'registry advanced', 'artifact changed'])(
+    'enforces the real finish gates: %s (mocked publication)', async scenario => {
+      const bytes = Buffer.from('tested rebaseline artifact');
+      const integrity = `sha512-${createHash('sha512').update(bytes).digest('base64')}`;
+      const releasePlan = {...resolvePlan(rebaselineInput), tarball: 'output/gasnonthachai-animation-maker-1.1.1.tgz', integrity};
+      const published = {...metadata, version: '1.1.1', dist: {integrity}};
+      const execute = vi.mocked(execFileSync), read = vi.mocked(readFile);
+      const originalExecute = execute.getMockImplementation()!, originalRead = read.getMockImplementation()!;
+      for (const [key, value] of Object.entries({
+        GITHUB_ACTIONS: 'true', GITHUB_REPOSITORY: rebaseline.repository, GITHUB_REF: 'refs/heads/prod',
+        RELEASE_AUTHORIZED: 'true', NODE_AUTH_TOKEN: '', NPM_TOKEN: '',
+        NPM_RELEASE_REBASELINE: scenario === 'revoked authorization' ? '' :
+          JSON.stringify(scenario === 'changed authorization' ? {...rebaseline, commit: base} : rebaseline),
+      })) vi.stubEnv(key, value);
+      const request = vi.fn()
+        .mockResolvedValueOnce(new Response('', {status: 404}))
+        .mockResolvedValueOnce(Response.json({versions: scenario === 'registry advanced' ?
+          {...rebaselineInput.versions, '1.2.0': metadata} : rebaselineInput.versions}))
+        .mockResolvedValueOnce(Response.json(published))
+        .mockResolvedValueOnce(new Response('', {status: 404}))
+        .mockResolvedValueOnce(Response.json({ref: 'refs/tags/v1.1.1'}));
+      vi.stubGlobal('fetch', request);
+      execute.mockClear().mockImplementation((_command, args) => {
+        if (args?.[0] === 'rev-parse') return scenario === 'wrong checkout' ? base : head;
+        if (args?.[0] === '--version') return '11.5.1';
+        return '';
+      });
+      read.mockResolvedValueOnce(JSON.stringify(releasePlan))
+        .mockResolvedValueOnce(scenario === 'artifact changed' ? Buffer.from('changed') : bytes);
+      try {
+        if (scenario === 'publish') {
+          await finishRelease();
+          expect(execute.mock.calls.filter(([, args]) => args?.[0] === 'publish')).toEqual([[
+            'npm', ['publish', resolve(releasePlan.tarball), '--access', 'public', '--provenance',
+              '--ignore-scripts', '--registry', 'https://registry.npmjs.org'], {stdio: 'inherit'},
+          ]]);
+          expect(request).toHaveBeenLastCalledWith(expect.stringContaining('/git/refs'), expect.objectContaining({
+            method: 'POST', body: JSON.stringify({ref: 'refs/tags/v1.1.1', sha: head}),
+          }));
+        } else {
+          await expect(finishRelease()).rejects.toThrow();
+          expect(execute.mock.calls.some(([, args]) => args?.[0] === 'publish')).toBe(false);
+          expect(request.mock.calls.some(([, options]) => options?.method)).toBe(false);
+        }
+      } finally {
+        execute.mockReset().mockImplementation(originalExecute);
+        read.mockReset().mockImplementation(originalRead);
+        vi.unstubAllEnvs();
+        vi.unstubAllGlobals();
+      }
+    });
+
+  it('verifies all new-release identity fields before tagging and never republishes an existing target', async () => {
+    const releasePlan = {...resolvePlan(rebaselineInput), integrity: metadata.dist.integrity};
+    const published = {...metadata, version: '1.1.1'};
+    const publish = vi.fn(), tag = vi.fn();
+    for (const changed of [
+      {...published, name: 'another-package'}, {...published, version: '1.1.0'},
+      {...published, gitHead: base}, {...published, dist: {integrity: 'sha512-other'}},
+    ]) {
+      await expect(publishAndTag(releasePlan, {lookup: async () => changed, publish, tag, wait: vi.fn()})).rejects.toThrow('mismatch');
+    }
+    expect(tag).not.toHaveBeenCalled();
+    await expect(publishAndTag(releasePlan, {lookup: async () => published, publish,
+      tag: async () => {throw new Error('tag interrupted');}, wait: vi.fn()})).rejects.toThrow('tag interrupted');
+    await publishAndTag({...releasePlan, action: 'recover'}, {lookup: async () => published, publish, tag, wait: vi.fn()});
+    expect(publish).not.toHaveBeenCalled();
+    expect(tag).toHaveBeenCalledOnce();
   });
 });
 

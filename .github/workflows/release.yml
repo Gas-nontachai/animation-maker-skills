@@ -36,10 +36,11 @@ jobs:
         id: plan
         env:
           NPM_BOOTSTRAP_RECOVERY: ${{ vars.NPM_BOOTSTRAP_RECOVERY }}
+          NPM_RELEASE_REBASELINE: ${{ vars.NPM_RELEASE_REBASELINE }}
         run: node scripts/release.mjs plan
 
       - name: Set release version
-        if: steps.plan.outputs.action == 'publish'
+        if: contains(fromJSON('["publish", "rebaseline"]'), steps.plan.outputs.action)
         env:
           VERSION: ${{ steps.plan.outputs.version }}
         run: |
@@ -58,7 +59,7 @@ jobs:
           "
 
       - name: Test and prepare artifact
-        if: steps.plan.outputs.action == 'publish'
+        if: contains(fromJSON('["publish", "rebaseline"]'), steps.plan.outputs.action)
         run: |
           npm ci --ignore-scripts
           npm test
@@ -93,7 +94,7 @@ jobs:
       github.ref == 'refs/heads/prod' &&
       vars.NPM_RELEASE_ENABLED == 'true' &&
       needs.prepare.result == 'success' &&
-      contains(fromJSON('["publish", "recover"]'), needs.prepare.outputs.action)
+      contains(fromJSON('["publish", "recover", "rebaseline"]'), needs.prepare.outputs.action)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: npm-production
@@ -153,5 +154,6 @@ jobs:
         env:
           RELEASE_AUTHORIZED: ${{ vars.NPM_RELEASE_ENABLED }}
           NPM_BOOTSTRAP_RECOVERY: ${{ vars.NPM_BOOTSTRAP_RECOVERY }}
+          NPM_RELEASE_REBASELINE: ${{ vars.NPM_RELEASE_REBASELINE }}
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/release.mjs finish

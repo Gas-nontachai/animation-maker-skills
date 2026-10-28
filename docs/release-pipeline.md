@@ -20,7 +20,7 @@ Never add an npm token to GitHub Secrets. The publish job uses GitHub-hosted Ubu
 
 The baseline is the greatest stable version actually present in the npm registry, not package.json, the last commit, the last workflow run or the newest git tag. Moving the npm `latest` dist-tag backwards cannot accidentally reuse a version. Prerelease-only package histories require manual review. Registry errors other than HTTP 404 fail closed rather than being treated as a first release.
 
-For an existing release, its published gitHead must be an ancestor of the checked-out prod commit. A matching verified release tag can supply a legacy baseline when metadata has no gitHead. When both are missing, planning fails with an actionable diagnostic unless the one-time bootstrap proof below succeeds. Every baseline must belong to the checked-out prod history; divergent history or conflicting evidence blocks recovery. The workflow never guesses from HEAD, prod, a successful workflow, or a matching version number. All commits since the baseline are inspected, including merged commits.
+For an existing release, its published gitHead must be an ancestor of the checked-out prod commit. A matching verified release tag can supply a legacy baseline when metadata has no gitHead. When both are missing, planning fails unless the one-time bootstrap proof below succeeds or the narrowly authorized new-version rebaseline is selected. Every established baseline must belong to the checked-out prod history; divergent history or conflicting evidence blocks recovery. The workflow never guesses the source of a legacy package from HEAD, prod, a successful workflow, or a matching version number. All commits since the baseline are inspected, including merged commits.
 
 Runtime files are bin/, packages/, renderer/, examples/, package.json, package-lock.json, tsconfig.json and scripts/ excluding the known CI/release/smoke helpers. New unclassified script helpers conservatively count as runtime. Tests, .github/, Skills and Docs do not count on their own. Changes in a package manifest/lock are conservatively runtime changes, including development-only dependency changes.
 
@@ -67,11 +67,42 @@ Required evidence and authorization:
 
 If evidence is incomplete, conflicts with gitHead/a tag, is from another history, or cannot reproduce npm's full integrity, recovery remains blocked and no tag is created. Obtain the original committed source and compatible packing toolchain; do not change the required hash, republish an existing version, or create a manual tag to get past verification. If the original artifact depended on uncommitted/generated content, this recovery mechanism cannot establish its source and must not be used.
 
+### One-time new-version rebaseline: 1.1.0 to 1.1.1
+
+Use this alternative when maintainers intentionally leave the original `1.1.0` source unverified. It does **not** recover or assert provenance for `1.1.0`. It publishes a new, tested `1.1.1` from an explicitly authorized prod checkout using the existing OIDC publish-and-tag implementation. It never republishes, unpublishes, changes or tags `1.1.0`.
+
+Merge this implementation through the reviewed PR flow first. Obtain the full 40-character SHA of the resulting **prod commit containing this implementation**, not the earlier prod SHA or a main-branch commit. In GitHub **Settings → Secrets and variables → Actions → Variables**, configure these repository variables:
+
+| Variable | Value |
+| --- | --- |
+| `NPM_RELEASE_ENABLED` | `true`, only after reviewing the existing release gates and npm trusted-publisher configuration |
+| `NPM_RELEASE_REBASELINE` | The exact JSON below, with `commit` replaced by that prod SHA |
+| `NPM_BOOTSTRAP_RECOVERY` | Unset/remove; bootstrap and rebaseline must not be combined |
+
+```json
+{
+  "repository": "Gas-nontachai/animation-maker-skills",
+  "existingVersion": "1.1.0",
+  "targetVersion": "1.1.1",
+  "commit": "<full-40-character-authorized-prod-commit>"
+}
+```
+
+No additional fields, alternate repository, versions, abbreviated SHA or branch name are accepted. This is explicit authorization, not a credential; do not create an npm token or change the protected environment. Rerun **all jobs** of the prod workflow for that exact commit after configuring the variables. If prod changes before selecting the run, review and authorize the intended prod commit again rather than authorizing a different checkout accidentally.
+
+Planning requires `1.1.0` to be the only stable registry release, with neither gitHead nor `v1.1.0`, and requires both `1.1.1` and `v1.1.1` to be absent. Prerelease `0.0.0-stage` is allowed. No legacy commit is required or inferred. The `rebaseline` plan has no old source baseline and fixes the new version at `1.1.1`, regardless of historical commit messages.
+
+Prepare uses the existing version-setting step to update only the runner's manifests to `1.1.1` and embed the authorized source `gitHead`. It runs `npm ci --ignore-scripts`, unit tests, typecheck, both security audits, and the standalone package install/render smoke test. Review that plan, artifact and evidence before approving the existing `npm-production` protected environment.
+
+Finish requires unchanged authorization and the exact authorized checkout, rechecks registry state immediately before any publish, and verifies the tested tarball's SHA-512. It publishes only that new tarball via Trusted Publishing/OIDC. The existing verification loop checks npm's name, version, gitHead and complete integrity before creating `v1.1.1` at the authorized commit. Registry advancement, changed/revoked authorization, artifact changes or conflicting metadata fail closed; an existing matching target is never published again.
+
+If publication succeeds but verification or tagging is interrupted, rerun all jobs: the registry's new `1.1.1` gitHead supplies normal recovery, and only its missing tag is restored. The old release remains untouched. Once `1.1.1` is verified and tagged, **delete repository variable `NPM_RELEASE_REBASELINE`**. Keep `NPM_BOOTSTRAP_RECOVERY` unset and retain `NPM_RELEASE_ENABLED=true` only if normal automatic releases should remain enabled. A leftover rebaseline variable cannot repeat the operation after `1.1.1` exists; normal planning takes over. Subsequent releases use the verified `1.1.1` source/tag baseline and ordinary version rules.
+
 ### Remaining evidence for v1.1.0
 
 Read-only npm inspection on 2026-10-28 confirms versions `0.0.0-stage` and `1.1.0`, absent gitHead for `1.1.0`, and the complete integrity above. No npm source attestation is advertised in its `dist` metadata; registry signatures alone do not link it to a commit. There is no local `v1.1.0` tag, and a public GitHub API lookup of that ref returns 404. The previously inspected CI artifact has a different integrity and cannot establish this baseline.
 
-**Still required:** the independently established original source commit in prod history and a successful unchanged-source pack matching that exact SHA-512. Neither is currently verified. A candidate commit was not supplied, and this implementation does not search for or invent one. Maintainers must also authorize the one-time variable and approve the existing release gate/environment. Protected-environment and trusted-publisher settings were not independently verified here. No publish, remote tag creation, push, or settings change is part of this implementation.
+**Legacy provenance remains unverified.** Recovering `v1.1.0` through bootstrap would still require the independently established original source commit in prod history and a successful unchanged-source pack matching that exact SHA-512. The new-version rebaseline above intentionally does not require that evidence and does not create `v1.1.0`. Maintainers must authorize the selected mode and approve the existing release gate/environment. Protected-environment and trusted-publisher settings were not independently verified here. No publish, remote tag creation, push, or settings change is part of this implementation.
 
 ## Security gate and scoped mitigation
 
@@ -94,11 +125,11 @@ Official setup references: [npm Trusted Publishing](https://docs.npmjs.com/trust
 
 Run `npm test`, `npm run typecheck`, `npm run security:check`, `npm run test:package` and actionlint on both workflow files. `node scripts/release.mjs plan` is read-only against git/npm and writes only output/release-plan.json; it never publishes or creates tags. `finish` is guarded against local execution.
 
-Release regression tests mock external mutations and cover patch/minor/major, accumulated changes, first release, greatest registry version, Docs/Skills-only skips, duplicate versions, missing baseline/tag conflicts, failed publish, delayed registry visibility, integrity mismatch and publish-success/tag-failure recovery. Bootstrap tests use local Git histories and actual offline npm packing to check unchanged-source proof, ignored dirty files, disabled hooks, full-integrity mismatch, unrelated history, source version mismatch and absent/changed/conflicting authorization. Mocked finalization covers interrupted/idempotent bootstrap, verification before tagging, no duplicate publication, and conflicting lightweight/annotated tags. The macOS package smoke checks standalone installation, effective scoped overrides, Chromium setup, both character renders, metadata and actual movement with the original checkout inaccessible.
+Release regression tests mock external mutations and cover patch/minor/major, accumulated changes, first release, greatest registry version, Docs/Skills-only skips, duplicate versions, missing baseline/tag conflicts, failed publish, delayed registry visibility, integrity mismatch and publish-success/tag-failure recovery. Rebaseline regressions cover exact authorization, registry/tag eligibility, changed/revoked authorization, wrong checkouts, stale registry state, altered artifacts, verified OIDC publish arguments and tag ordering, interrupted recovery and subsequent normal versioning. Bootstrap tests use local Git histories and actual offline npm packing to check unchanged-source proof, ignored dirty files, disabled hooks, full-integrity mismatch, unrelated history, source version mismatch and absent/changed/conflicting authorization. Mocked finalization covers interrupted/idempotent bootstrap, verification before tagging, no duplicate publication, and conflicting lightweight/annotated tags. The macOS package smoke checks standalone installation, effective scoped overrides, Chromium setup, both character renders, metadata and actual movement with the original checkout inaccessible.
 
 Live GitHub runner execution, environment protection enforcement, OIDC identity exchange, npm publication and GitHub tag creation cannot be claimed from these local tests. They require the manual setup and explicit authorization above.
 
-Evidence is written to output/audit-ci-production.json, output/audit-ci-full.json, output/audit-consumer.json, output/phase1.7-package-evidence.json and output/release-plan.json. Output is gitignored; GitHub runs upload audit/package evidence as workflow artifacts. A real plan against the current registry must fail closed until v1.1.0 has verified bootstrap evidence or an already verified baseline; the earlier pre-publication first-release result no longer describes registry state. Local test results do not prove live OIDC publishing or production environment enforcement.
+Evidence is written to output/audit-ci-production.json, output/audit-ci-full.json, output/audit-consumer.json, output/phase1.7-package-evidence.json and output/release-plan.json. Output is gitignored; GitHub runs upload audit/package evidence as workflow artifacts. A real plan against the current registry must fail closed without verified bootstrap evidence, exact rebaseline authorization or an already verified baseline; the earlier pre-publication first-release result no longer describes registry state. Local test results do not prove live OIDC publishing or production environment enforcement.
 
 ### Bootstrap implementation validation — 2026-10-28
 
@@ -114,3 +145,5 @@ Evidence is written to output/audit-ci-production.json, output/audit-ci-full.jso
 | Live OIDC publish / remote tag creation | NOT RUN |
 
 Validation used local Node 22.23.4/npm 10.9.9; live release runners retain Node 24 and the npm >=11.5.1 OIDC requirement. Smoke evidence and copied videos remain under output/; task-created temporary smoke installations and the downloaded linter were removed after validation.
+
+Rebaseline implementation validation (2026-10-28): all 75 unit tests passed, including 60 release tests; typecheck, production/full zero-vulnerability security audits, standalone package smoke and checksum-verified actionlint 1.7.7 on both workflows passed. The local package smoke used the checked-in manifest version; preparation of `1.1.1` remains a gated workflow operation. Rebaseline publication and tag creation were tested with mocks only. No live publish, tag, push or repository-setting change was performed.
