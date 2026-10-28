@@ -3,6 +3,7 @@ import {appendFile, mkdir, readFile, writeFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
+import {resolve} from 'node:path';
 
 const registry = 'https://registry.npmjs.org';
 export const packageName = '@gasnonthachai/animation-maker';
@@ -151,7 +152,7 @@ async function ensureTag(plan) {
   await github('git/refs', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({ref: `refs/${ref}`, sha: plan.head})});
 }
 
-async function finishRelease() {
+export async function finishRelease() {
   assert.equal(process.env.GITHUB_ACTIONS, 'true', 'Publishing is GitHub Actions only');
   assert.equal(process.env.GITHUB_REPOSITORY, repository);
   assert.equal(process.env.GITHUB_REF, 'refs/heads/prod', 'Only prod may release');
@@ -175,7 +176,7 @@ async function finishRelease() {
       assert.equal(plan.tarball, `output/gasnonthachai-animation-maker-${plan.version}.tgz`);
       const integrity = `sha512-${createHash('sha512').update(await readFile(plan.tarball)).digest('base64')}`;
       assert.equal(integrity, plan.integrity, 'Tested tarball was changed before publishing');
-      execFileSync('npm', ['publish', plan.tarball, '--access', 'public', '--provenance', '--ignore-scripts', '--registry', registry], {stdio: 'inherit'});
+      execFileSync('npm', ['publish', resolve(plan.tarball), '--access', 'public', '--provenance', '--ignore-scripts', '--registry', registry], {stdio: 'inherit'});
     },
     tag: () => ensureTag(plan),
     wait: () => new Promise(resolve => setTimeout(resolve, 5000)),
