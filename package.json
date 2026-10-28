@@ -1,6 +1,6 @@
 {
-  "name": "@gas-nontachai/animation-maker",
-  "version": "1.0.0",
+  "name": "@gasnonthachai/animation-maker",
+  "version": "1.1.0",
   "description": "Local-first data-driven SVG animation skills and runtime",
   "scripts": {
     "validate": "node --import tsx scripts/validate.ts",
@@ -9,7 +9,9 @@
     "typecheck": "tsc --noEmit",
     "test:integration": "node --import tsx scripts/smoke.ts",
     "doctor": "node bin/animation-maker.mjs doctor",
-    "test:package": "node --import tsx scripts/package-smoke.ts"
+    "test:package": "node --import tsx scripts/package-smoke.ts",
+    "test:release": "node --import tsx scripts/release-smoke.ts",
+    "security:check": "node scripts/security-gate.mjs"
   },
   "license": "MIT",
   "type": "module",
@@ -18,17 +20,16 @@
     "node": ">=22"
   },
   "dependencies": {
-    "@remotion/bundler": "4.0.373",
-    "@remotion/renderer": "4.0.373",
+    "@remotion/bundler": "4.0.539",
+    "@remotion/renderer": "4.0.539",
     "@xmldom/xmldom": "0.8.15",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "remotion": "4.0.373",
-    "tsx": "^4.20.0",
+    "remotion": "4.0.539",
+    "tsx": "4.23.15",
     "zod": "4.6.7"
   },
   "devDependencies": {
-    "@gas-nontachai/animation-maker": "file:../../../../tmp/gas-nontachai-animation-maker-1.0.0.tgz",
     "@types/node": "^22.0.0",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
@@ -49,6 +50,22 @@
     "renderer/src/",
     "examples/waving-character/",
     "skills/",
-    "tsconfig.json"
-  ]
+    "tsconfig.json",
+    "scripts/create.ts",
+    "scripts/wave.ts",
+    "scripts/inspect.ts",
+    "docs/security-phase1.7.md",
+    "docs/phase1.7-verification.md",
+    "docs/release-pipeline.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Gas-nontachai/animation-maker-skills.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "overrides": {
+    "zod": "$zod"
+  }
 }

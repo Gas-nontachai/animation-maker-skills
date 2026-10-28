@@ -1,56 +1,58 @@
-# AI Animation Skills — Phase 1.6
+# Animation Maker Skills — Phase 1.7 release candidate
 
-Local-first TypeScript tools and Agent Skills for assembling SVG parts, evaluating JSON keyframes, and exporting video. No editor or web application. The controlled example waves three times over 3 seconds.
+Turn a request such as “สร้างแอนิเมชันตัวละครโบกมือ 3 วินาที และ Export เป็น MP4” into a new SVG robot, rig, three-second waving timeline and silent MP4. No editor, Web UI or new rendering framework. The existing monorepo and example remain supported.
 
-## Install in any project
+## Release status
 
-Requires Node.js 22+ and npm. `@gas-nontachai/animation-maker@1.0.0` is a provisional package name/version; it has **not been published by this workflow**. Install the local artifact today:
+Runtime/Skills compatibility is pinned to `@gasnonthachai/animation-maker@1.1.0`, using Remotion 4.0.539. This is a release candidate: **do not assume it is published**. Check `npm view @gasnonthachai/animation-maker@1.1.0 version` before registry installation. The current release requires maintainer publication authorization and npm authentication, plus updating the GitHub Skills. A tarball test is not evidence that the public one-prompt workflow has shipped.
+
+## First-use workflow after release
+
+Requires Node.js 22+, npm and Codex:
 
 ```sh
-npm install -D /path/to/gas-nontachai-animation-maker-1.0.0.tgz
+mkdir my-animation
+cd my-animation
+npx skills add Gas-nontachai/animation-maker-skills
+codex
 ```
 
-After publication is separately confirmed, the registry equivalent will be `npm install -D @gas-nontachai/animation-maker@1.0.0`. Installing dependencies and downloading external tools requires the user's authorization. Skills never fetch a missing runtime implicitly.
+Ask: “สร้างแอนิเมชันตัวละครโบกมือ 3 วินาที และ Export เป็น MP4”. The animate Skill checks the project-local manifest and CLI version and reuses version 1.1.0. If absent, it verifies registry availability and requests approval for `npm install --save-dev --save-exact @gasnonthachai/animation-maker@1.1.0`. It never falls back to a developer checkout, a global runtime, a tarball or an implicit npx download. Installing Skills does not install the runtime. Existing session authorization is reused.
 
-Install the three Skills from an updated checkout or package directory with an approved skills installer:
+The workflow runs doctor, requests a compatible browser download only when needed, creates source assets, validates with at most two source-repair attempts, renders with host approval when required, then inspects the MP4. It preserves character SVGs, rig.json and timeline.json. The first supported motion is one character waving in one scene; a friendly robot is the default. Codex can edit generated SVG primitives to match a visual description while retaining attachment points.
 
-```sh
-npx skills add ./node_modules/@gas-nontachai/animation-maker --agent codex --copy
-```
-
-Once these changes are available in the GitHub repository, `npx skills add Gas-nontachai/animation-maker-skills` is the remote equivalent. The skills installer is separate from the runtime and may itself require a package download. Skills are discoverable under `.agents/skills/`; keep `animate/references/` with its SKILL.md.
-
-From the target project, check the locally installed executable before using npx. `--no-install` prevents fetching a missing CLI:
+The corresponding installed CLI commands are:
 
 ```sh
+./node_modules/.bin/animation-maker --version
 ./node_modules/.bin/animation-maker doctor
-npx --no-install animation-maker validate --project ./example
-npx --no-install animation-maker render --project ./example --output ./output.mp4
+./node_modules/.bin/animation-maker create --project ./animation
+./node_modules/.bin/animation-maker validate --project ./animation
+./node_modules/.bin/animation-maker render --project ./animation --output ./output/wave.mp4
+./node_modules/.bin/animation-maker inspect --input ./output/wave.mp4
 ```
 
-On Windows, use `node_modules\.bin\animation-maker.cmd` or the npx form. `--project` and `--output` are relative to the calling directory. Each asset is relative to the supplied project's `character/` folder, with filesystem and SVG security validation preserved. A complete example is included under `node_modules/@gas-nontachai/animation-maker/examples/waving-character`; copy that directory to `./example` to try it. No original checkout, global CLI or system FFmpeg is needed.
+Use `npx --no-install animation-maker` after confirming local installation, or the `.cmd` shim on Windows. `create` reserves a new project directory and refuses existing directories; rendering refuses existing outputs. Metadata inspection uses bundled ffprobe. The default wave is H.264, 1280×720, 24 FPS, 72 frames, 3 seconds, no audio. A successful export must be distinguished from validation-only success. Report visual movement verification only when decoded frames were checked.
 
-## Browser setup and permissions
+## Browser and permission troubleshooting
 
-`doctor` checks Node/platform information, bundled FFmpeg/ffprobe, Chromium availability and local server binding. It exits nonzero if a prerequisite fails. It does not download a browser by default and does not prove browser launch or all OS libraries; use a real render for that check.
-
-If Chromium is missing, approve one explicit setup command:
+`doctor` checks bundled FFmpeg/ffprobe, a compatible browser and local server binding. It does not prove browser launch or all OS libraries; a real render does. If a browser is missing/incompatible, explicitly approve:
 
 ```sh
-npx --no-install animation-maker doctor --download-browser
+./node_modules/.bin/animation-maker doctor --download-browser
 ```
 
-Alternatively pass `--browser-executable <path>` to doctor and render for an already installed compatible Chromium. No machine-specific path is stored in the package. The browser cache belongs to the calling project (`node_modules/.remotion`), and required Chromium OS libraries must be available, especially on Linux. Render never downloads Chromium implicitly.
+Download, progress, ZIP extraction, cache version checks and executable discovery use the public Remotion `ensureBrowser` API. It returns a status object, not void, in the pinned version. The wrapper verifies the returned executable file. It never modifies system Chrome or App Management permissions. An existing compatible browser may be explicitly supplied using `--browser-executable <path>` on doctor/render. No machine path is stored in code. Render never downloads implicitly.
 
-Chromium bootstrap uses only the public `ensureBrowser()` API. In pinned Remotion 4.0.373 its implementation and declarations return `Promise<BrowserStatus>` (including an executable path on success), not `void`. With `--download-browser`, Remotion's default progress reporter displays the download; without it, the callback refuses a download before network access. Doctor and render share this resolution and check that the resolved path is an executable file.
+The old Remotion 4.0.373 downloader could skip an existing platform cache folder with no executable. The new pinned version includes a path-checking ZIP extractor, download locking, a VERSION file and re-download handling for unversioned/mismatched caches. The package test seeds an incomplete cache and verifies recovery through the public API, then renders with the downloaded executable. A damaged cache with a current VERSION may still need manual recovery: move aside the affected project's `node_modules/.remotion/chrome-headless-shell` cache and retry the approved download, or pass an explicit executable. Cache layout instructions are version-specific; no browser internals are imported by this CLI.
 
-If setup reports an incomplete cache, Remotion 4.0.373 may have found a platform cache directory without its executable and skipped downloading. Move aside the affected project's `node_modules/.remotion/chrome-headless-shell` directory, then retry `doctor --download-browser` with approval, or use `--browser-executable`. The CLI deliberately does not delete browser caches. That recovery directory is specific to the pinned Remotion cache layout; bootstrap itself does not import cache or browser internals. Network/download failures retain the original error and point to network/cache permissions and the explicit executable alternative.
+For `listen EPERM` or a denied browser launch, use the host's supported approval mechanism for the failed command. Do not disable sandbox, path or SVG checks. If approval is denied/unavailable, provide the exact command to finish in an authorized terminal:
 
-Rendering requires permission to bind a local HTTP server and launch headless Chromium. In a restricted Codex sandbox, `listen EPERM` is an environment limitation: request host approval for the command and stop if permission is denied. Do not disable sandbox or SVG/path checks. Phase 1.5 reproduced this with plain Node servers on IPv4 and IPv6; the same renderer worked with authorized execution. Changing ports does not fix a binding prohibition. Browser download errors need network permission separately.
+```sh
+./node_modules/.bin/animation-maker render --project ./animation --output ./output/wave.mp4
+```
 
-If FFmpeg/ffprobe fail, reinstall platform optional dependencies from the package lock; do not copy binaries from another OS or assume a global installation. Remotion ships a reduced FFmpeg build and macOS requires its adjacent shared libraries. The test helper uses Remotion's pinned binary resolver and library environment. Rerun package/integration tests when upgrading Remotion, including any use of `RenderInternals`.
-
-The renderer exports silent H.264 MP4, 1280 × 720. The example uses 24 FPS, 72 frames, 3 seconds. Existing outputs are refused; failed renders clean up staging files. All Remotion packages must use the same version. This repository's MIT license covers its code and example artwork; Remotion has its own [license terms](https://www.remotion.dev/docs/license).
+Network/cache permission errors are separate from binding errors. Downloading a complete ZIP does not prove successful extraction or rendering. Use project-local headless Chromium and required OS libraries rather than reconfiguring system Chrome. Reinstall platform optional dependencies if bundled FFmpeg is missing. `RenderInternals.callFf`/binary resolution are the existing version-sensitive dependency for bundled FFmpeg; rerun tests on upgrades.
 
 ## Project contract
 
@@ -64,34 +66,23 @@ Optional timeline `placement: {"x": 440, "y": 60, "scale": 1}` positions the cha
 
 Pure animation exports live in `packages/animation-runtime/src/index.ts`: `validateAnimation`, `ease`, `interpolate`, `evaluateFrame`, and matrix multiplication. Parse data before evaluating; the pure evaluator assumes validated inputs and returns local properties plus world matrices and inherited opacity. It rejects frame indices outside the timeline. Filesystem/SVG validation lives in `scripts/project.ts`; React composition and Remotion consume validated data, never file paths.
 
-## Development and package verification
+## Security and development
 
-The existing monorepo layout is retained. The root npm package includes `bin/`, selected CLI scripts, `packages/animation-runtime/src/`, `renderer/src/`, the example and all three Skills. The CLI registers the existing tsx loader with its own settings; tsx is a production dependency. Source shipping avoids a second build pipeline and keeps Remotion's existing TypeScript bundling. TypeScript/Vitest are development-only dependencies. There are no install scripts or checkout path fallbacks.
+The [npm CI/CD release pipeline](docs/release-pipeline.md) validates PRs and prepares releases only on pushes to `prod`. Publication remains disabled until explicit repository enablement and protected-environment approval; it uses npm Trusted Publishing, not npm token secrets. See that report for versioning, recovery and required manual npm/GitHub setup.
 
-From this repository:
+See [security review](docs/security-phase1.7.md) and [release verification](docs/phase1.7-verification.md). The repo uses its package lock and a Zod override for development audits. Root overrides and attempted shrinkwrap pinning did not patch all downstream consumers: upstream Remotion packages pin vulnerable Zod 4.5.4. The Skills merge a target-project override `"@gasnonthachai/animation-maker": {"zod": "4.6.7"}` before the authorized install. They preserve unrelated config and stop on conflicting override values. This scopes the patch to this runtime's dependencies. A clean workflow consumer audit is a separate required check; installing the bare runtime without this mitigation retains upstream advisories and is not approved for public release without explicit residual-risk acceptance. The old machine-specific self-dependency was removed. TypeScript source shipping uses the existing production tsx loader; no second build framework or install hook is introduced.
 
 ```sh
 npm ci
-npm run validate -- --project examples/waving-character
 npm test
 npm run typecheck
 npm run test:integration
-npm pack --pack-destination output
 npm run test:package
+npm run test:release
 ```
 
-`test:integration` preserves the original metadata and pixel checks, using bundled FFmpeg/ffprobe rather than system binaries. Frame sampling uses `trim` and raw RGB through `image2pipe`, supported by the reduced bundled FFmpeg.
+`test:package` is an authorized pre-release tarball test. It applies the same scoped project override as the Skills and checks package contents and a clean consumer audit, installs all three candidate Skills, denies checkout reads via an additional macOS policy, repairs a seeded incomplete browser cache through explicit setup, renders both the old example and a newly generated robot, and checks metadata plus decoded pixels. It retains the temporary project and copies generated MP4/source evidence under gitignored output/. It is not the npm-registry release test.
 
-`test:package` requires authorized network access to install the tarball's dependencies, skills CLI 1.7.4 and Chromium, and authorized local server/browser execution. It packs the actual artifact, installs it without lifecycle scripts into a fresh temporary project, and uses the real skills installer to copy all three Skills into `.agents/skills/`. It verifies missing-browser and incomplete-cache errors, then explicitly downloads Chromium with `doctor --download-browser` while checkout reads are denied. The downloaded executable is reused by doctor and render; no browser cache is copied from the checkout. Unit tests cover opt-in enforcement, installation success/failure and executable validation.
+`test:release` starts without a runtime or local tarball. It downloads Skills from GitHub, requires their version pin to match 1.1.0, then installs only from npm and repeats isolated browser/render checks. It fails if the public release is unavailable or outdated. These tests require explicit permission for external downloads and rendering. The isolation harness currently requires macOS; Linux/Windows remain unverified.
 
-On macOS the test applies an additional `sandbox-exec` policy denying all reads under the original checkout. The isolated process asserts that reading the checkout's package.json fails, then runs installed CLI doctor, validation, render, metadata/pixel checks and overwrite protection. No original directory is renamed or hidden. It retains the temporary project for inspection and writes the tarball, `wave-standalone.mp4` and `phase1.6-evidence.json` under gitignored `output/`. The isolation harness currently requires macOS; an equivalent checkout-denial test is needed before claiming Linux/Windows verification.
-
-## Agent Skills
-
-- `create-character`: manual SVG asset and rig contract; automatic generation is deferred.
-- `animate`: controlled JSON timeline editing and validation, with a bundled timeline reference.
-- `render-video`: installed CLI, browser provisioning, rendering and permission troubleshooting.
-
-Install runtime dependencies locally in each target project and commit that project's package lock. The Skills refer only to the installed CLI and package files, never to this checkout. Installing a Skill does not install its runtime or authorize package/browser downloads.
-
-No Web UI, character generation, natural-language animation generation, audio, lip sync, storyboard or new rendering framework is included.
+Public publication is a separate final action after security review, artifact verification, npm login and explicit maintainer approval. No automatic publish occurs in scripts. The project's MIT license covers its code and artwork; Remotion has separate [license terms](https://www.remotion.dev/docs/license).

@@ -12,8 +12,7 @@ export async function browser(browserExecutable?: string, download = false) {
   } catch (error) {
     throw new Error(`Chromium ${download ? 'installation' : 'resolution'} failed: ${(error as Error).message}. Check the browser path and cache permissions${download ? ', and network access for the download' : ''}; alternatively pass --browser-executable <path> to an installed Chromium.`, {cause: error});
   }
-  // Remotion 4.0.373 can skip downloading an incomplete cache directory and still return no-browser.
-  if (status.type === 'no-browser') throw new Error('Chromium installation produced no executable. An incomplete Remotion browser cache may be present: move aside this project\'s node_modules/.remotion/chrome-headless-shell cache, then retry animation-maker doctor --download-browser with approval. Alternatively pass --browser-executable <path>.');
+  if (status.type === 'no-browser' || status.type === 'version-mismatch') throw new Error('Chromium installation produced no compatible executable. An incomplete Remotion browser cache may be present: move aside this project\'s node_modules/.remotion/chrome-headless-shell cache, then retry animation-maker doctor --download-browser with approval. Alternatively pass --browser-executable <path>.');
   try {
     if (!(await stat(status.path)).isFile()) throw new Error('path is not a file');
     await access(status.path, constants.X_OK);

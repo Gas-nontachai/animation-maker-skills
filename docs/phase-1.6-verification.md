@@ -1,6 +1,6 @@
 # Phase 1.6 — PASS
 
-Verified 2026-10-27 on macOS arm64, Node.js 22.23.4, npm 10.9.9 and Remotion 4.0.373. Package name/version: `@gas-nontachai/animation-maker@1.0.0`, provisional and not published by this work. `private: true` remains set.
+Verified 2026-10-27 on macOS arm64, Node.js 22.23.4, npm 10.9.9 and Remotion 4.0.373. Package name/version: `@gasnonthachai/animation-maker@1.0.0`, provisional and not published by this work. `private: true` remains set.
 
 | Requirement | Result and evidence |
 | --- | --- |
@@ -16,7 +16,7 @@ Additional checks: existing unit tests 7/7, TypeScript check, example validation
 
 ## Artifacts
 
-- `output/gas-nontachai-animation-maker-1.0.0.tgz` — tested installable artifact, including source files and production tsx dependency.
+- `output/gasnonthachai-animation-maker-1.0.0.tgz` — tested installable artifact, including source files and production tsx dependency.
 - `output/wave-standalone.mp4` — independently rendered video; SHA-256 `c19e26bb723831b470dfb58a38a7544e5ac60af86f2cc03041a68383236480f7`.
 - `output/phase1.6-evidence.json` — artifact integrity and retained temporary project location.
 
