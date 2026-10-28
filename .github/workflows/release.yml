@@ -1,0 +1,93 @@
+name: Release npm
+
+on:
+  push:
+    branches: [prod]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm-animation-maker-release
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: github.ref == 'refs/heads/prod'
+    runs-on: macos-15
+    timeout-minutes: 30
+    outputs:
+      action: ${{ steps.plan.outputs.action }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: node scripts/security-gate.mjs manifest
+      - id: plan
+        run: node scripts/release.mjs plan
+      - if: steps.plan.outputs.action == 'publish'
+        env:
+          VERSION: ${{ steps.plan.outputs.version }}
+        run: |
+          npm version "$VERSION" --no-git-tag-version --ignore-scripts
+          npm pkg set "gitHead=$GITHUB_SHA"
+      - if: steps.plan.outputs.action == 'publish'
+        run: |
+          npm ci --ignore-scripts
+          npm test
+          npm run typecheck
+          npm run security:check
+          npm run test:package
+          node scripts/release.mjs artifact
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: steps.plan.outputs.action != 'skip' && success()
+        with:
+          name: npm-release
+          path: |
+            output/release-plan.json
+            output/*.tgz
+          if-no-files-found: error
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: release-evidence
+          path: |
+            output/audit-*.json
+            output/phase1.7-package-evidence.json
+          if-no-files-found: ignore
+
+  publish:
+    needs: prepare
+    if: >-
+      github.ref == 'refs/heads/prod' &&
+      vars.NPM_RELEASE_ENABLED == 'true' &&
+      needs.prepare.result == 'success' &&
+      contains(fromJSON('["publish", "recover"]'), needs.prepare.outputs.action)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: npm-production
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: npm-release
+          path: output
+      - name: Publish with OIDC, verify npm, then create tag (or recover)
+        env:
+          RELEASE_AUTHORIZED: ${{ vars.NPM_RELEASE_ENABLED }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/release.mjs finish

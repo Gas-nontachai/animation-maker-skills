@@ -68,6 +68,8 @@ Pure animation exports live in `packages/animation-runtime/src/index.ts`: `valid
 
 ## Security and development
 
+The [npm CI/CD release pipeline](docs/release-pipeline.md) validates PRs and prepares releases only on pushes to `prod`. Publication remains disabled until explicit repository enablement and protected-environment approval; it uses npm Trusted Publishing, not npm token secrets. See that report for versioning, recovery and required manual npm/GitHub setup.
+
 See [security review](docs/security-phase1.7.md) and [release verification](docs/phase1.7-verification.md). The repo uses its package lock and a Zod override for development audits. Root overrides and attempted shrinkwrap pinning did not patch all downstream consumers: upstream Remotion packages pin vulnerable Zod 4.5.4. The Skills merge a target-project override `"@gasnonthachai/animation-maker": {"zod": "4.6.7"}` before the authorized install. They preserve unrelated config and stop on conflicting override values. This scopes the patch to this runtime's dependencies. A clean workflow consumer audit is a separate required check; installing the bare runtime without this mitigation retains upstream advisories and is not approved for public release without explicit residual-risk acceptance. The old machine-specific self-dependency was removed. TypeScript source shipping uses the existing production tsx loader; no second build framework or install hook is introduced.
 
 ```sh
