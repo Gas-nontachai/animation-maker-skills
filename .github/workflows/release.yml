@@ -126,6 +126,27 @@ jobs:
           name: npm-release
           path: output
 
+      - name: Verify OIDC environment
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node --version
+          npm --version
+          npm config get registry
+
+          if [[ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]]; then
+            echo "::error::GitHub OIDC request URL missing"
+            exit 1
+          fi
+
+          if [[ -z "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}" ]]; then
+            echo "::error::GitHub OIDC request token missing"
+            exit 1
+          fi
+
+          echo "GitHub OIDC environment available"
+
       - name: Publish with OIDC, verify npm, then create tag (or recover)
         env:
           RELEASE_AUTHORIZED: ${{ vars.NPM_RELEASE_ENABLED }}
