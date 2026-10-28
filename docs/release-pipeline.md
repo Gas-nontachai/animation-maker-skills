@@ -33,7 +33,7 @@ Among runtime-touching commits: `fix` means patch, `feat` means minor, and a Con
 
 For a genuinely unpublished package (registry 404), generic first-release planning still uses the checked-in manifest version exactly, and skips if there are no runtime changes. This path does not replace the established `1.1.1` baseline for this package. The checked-in `1.1.0` manifest is intentionally not changed by this cleanup; runner-only versioning uses registry truth.
 
-Skills installed from GitHub keep their explicit compatibility pin. Updating that pin is a separate reviewed Skills change and does not itself publish a runtime. The workflow does not rewrite source Skills or commit CI versions back to prod.
+Skills installed from GitHub use the compatible runtime range `^1.1.1` (`>=1.1.1 <2.0.0`, stable releases only) and reuse existing compatible installations without upgrading them. Updating that range is a separate reviewed Skills change and does not itself publish a runtime. The workflow does not rewrite source Skills or commit CI versions back to prod.
 
 ## Registry propagation and interrupted-release recovery
 

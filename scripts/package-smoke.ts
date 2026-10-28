@@ -32,6 +32,7 @@ execFileSync('npm', ['exec', '--yes', '--package=skills@1.7.4', '--cache', cache
 await cp(path.join(installed, 'examples/waving-character'), path.join(dir, 'example'), {recursive: true});
 await cp('tests/check-video.mjs', path.join(dir, 'check-video.mjs'));
 await cp('tests/installed-package.mjs', path.join(dir, 'installed-package.mjs'));
+await cp('tests/check-skills.mjs', path.join(dir, 'check-skills.mjs'));
 const profile = `(version 1)(allow default)(deny file-read* (subpath ${JSON.stringify(root)}))`;
 const env = {...process.env};
 delete env.NODE_PATH;
