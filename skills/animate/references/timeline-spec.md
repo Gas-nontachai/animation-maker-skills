@@ -6,4 +6,4 @@ Each track has target (existing part ID), property, and at least one keyframe. P
 
 Keyframes contain time (seconds, 0 through duration), finite value, easing (default linear). Times must be strictly increasing; duplicate target/property tracks are rejected. The easing on the starting keyframe controls the segment to the next keyframe. Supported easing: linear, easeIn (quadratic), easeOut (quadratic), easeInOut (quadratic). Values hold before the first and after the last keyframe. Rotation interpolates numerically, allowing negative values and multiple turns.
 
-Example controlled timeline: `node_modules/@gas-nontachai/animation-maker/examples/waving-character/timeline.json` in the target project. Last keyframe may be at duration even though the last rendered sample is one frame earlier.
+Example controlled timeline: `node_modules/@gasnonthachai/animation-maker/examples/waving-character/timeline.json` in the target project. Last keyframe may be at duration even though the last rendered sample is one frame earlier.

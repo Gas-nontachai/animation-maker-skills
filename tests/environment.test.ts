@@ -58,6 +58,11 @@ describe('Chromium bootstrap', () => {
     await expect(browser(undefined, true)).rejects.toThrow(/incomplete.*cache.*doctor --download-browser/);
   });
 
+  it('reports an unresolved browser version mismatch rather than returning a missing path', async () => {
+    ensure.mockResolvedValue({type: 'version-mismatch', actualVersion: '134.0.0.0'});
+    await expect(browser(undefined, true)).rejects.toThrow('no compatible executable');
+  });
+
   it('rejects a reported executable that is missing or a directory', async () => {
     const file = await executable();
     for (const invalid of [path.join(path.dirname(file), 'missing'), path.dirname(file)]) {

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {readFileSync, realpathSync} from 'node:fs';
+import {readFileSync, realpathSync, mkdirSync} from 'node:fs';
 import {execFileSync, spawnSync} from 'node:child_process';
 import {checkVideo} from './check-video.mjs';
 
@@ -13,6 +13,7 @@ for (const skill of ['animate', 'create-character', 'render-video']) {
 assert.ok(readFileSync('.agents/skills/animate/references/timeline-spec.md', 'utf8').includes('Timeline v1.0'));
 const cli = 'node_modules/.bin/animation-maker';
 const run = (...args) => execFileSync(process.execPath, [cli, ...args], {stdio: 'inherit'});
+mkdirSync(`node_modules/.remotion/chrome-headless-shell/${process.arch === 'arm64' ? 'mac-arm64' : 'mac-x64'}`, {recursive: true});
 const bootstrap = execFileSync(process.execPath, [cli, 'doctor', '--download-browser'], {encoding: 'utf8'});
 process.stdout.write(bootstrap);
 assert.match(bootstrap, /Downloading Chrome Headless Shell/);
@@ -20,6 +21,13 @@ run('doctor');
 run('validate', '--project', './example');
 run('render', '--project', './example', '--output', './wave.mp4');
 checkVideo('wave.mp4');
+run('create', '--project', './generated-wave');
+run('validate', '--project', './generated-wave');
+run('render', '--project', './generated-wave', '--output', './generated-wave.mp4');
+checkVideo('generated-wave.mp4');
+const metadata = JSON.parse(execFileSync(process.execPath, [cli, 'inspect', '--input', './generated-wave.mp4'], {encoding: 'utf8'}));
+assert.equal(metadata.streams[0].nb_frames, '72');
+assert.equal(execFileSync(process.execPath, [cli, '--version'], {encoding: 'utf8'}).trim(), '1.1.0');
 const originalVideo = readFileSync('wave.mp4');
 const overwrite = spawnSync(process.execPath, [cli, 'render', '--project', './example', '--output', './wave.mp4'], {encoding: 'utf8'});
 assert.equal(overwrite.status, 1);
