@@ -54,6 +54,7 @@
     "scripts/create.ts",
     "scripts/wave.ts",
     "scripts/inspect.ts",
+    "docs/asset-contract.md",
     "docs/security-phase1.7.md",
     "docs/phase1.7-verification.md",
     "docs/release-pipeline.md"
