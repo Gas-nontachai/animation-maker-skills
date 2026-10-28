@@ -27,7 +27,8 @@ run('render', '--project', './generated-wave', '--output', './generated-wave.mp4
 checkVideo('generated-wave.mp4');
 const metadata = JSON.parse(execFileSync(process.execPath, [cli, 'inspect', '--input', './generated-wave.mp4'], {encoding: 'utf8'}));
 assert.equal(metadata.streams[0].nb_frames, '72');
-assert.equal(execFileSync(process.execPath, [cli, '--version'], {encoding: 'utf8'}).trim(), '1.1.0');
+const installedManifest = JSON.parse(readFileSync('node_modules/@gasnonthachai/animation-maker/package.json', 'utf8'));
+assert.equal(execFileSync(process.execPath, [cli, '--version'], {encoding: 'utf8'}).trim(), installedManifest.version);
 const originalVideo = readFileSync('wave.mp4');
 const overwrite = spawnSync(process.execPath, [cli, 'render', '--project', './example', '--output', './wave.mp4'], {encoding: 'utf8'});
 assert.equal(overwrite.status, 1);

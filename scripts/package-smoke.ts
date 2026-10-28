@@ -19,6 +19,7 @@ execFileSync('npm', ['install', '--save-dev', path.join(root, 'output', packed.f
 const auditResult = spawnSync('npm', ['audit', '--json', '--cache', cache], {cwd: dir, encoding: 'utf8'});
 const audit = JSON.parse(auditResult.stdout);
 await writeFile('output/audit-consumer.json', JSON.stringify(audit, null, 2) + '\n');
+assert.equal(auditResult.status, 0, 'Clean consumer audit returned a failure (see output/audit-consumer.json)');
 assert.equal(audit.metadata.vulnerabilities.total, 0, `Consumer audit: ${JSON.stringify(audit.metadata.vulnerabilities)}`);
 const installed = path.join(dir, 'node_modules/@gasnonthachai/animation-maker');
 assert.ok(!(await realpath(installed)).startsWith(root + path.sep));

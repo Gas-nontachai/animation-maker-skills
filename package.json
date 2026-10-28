@@ -10,7 +10,8 @@
     "test:integration": "node --import tsx scripts/smoke.ts",
     "doctor": "node bin/animation-maker.mjs doctor",
     "test:package": "node --import tsx scripts/package-smoke.ts",
-    "test:release": "node --import tsx scripts/release-smoke.ts"
+    "test:release": "node --import tsx scripts/release-smoke.ts",
+    "security:check": "node scripts/security-gate.mjs"
   },
   "license": "MIT",
   "type": "module",
@@ -54,7 +55,8 @@
     "scripts/wave.ts",
     "scripts/inspect.ts",
     "docs/security-phase1.7.md",
-    "docs/phase1.7-verification.md"
+    "docs/phase1.7-verification.md",
+    "docs/release-pipeline.md"
   ],
   "repository": {
     "type": "git",
