@@ -1,6 +1,6 @@
 {
   "name": "@gasnonthachai/animation-maker",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "description": "Local-first data-driven SVG animation skills and runtime",
   "scripts": {
     "validate": "node --import tsx scripts/validate.ts",
