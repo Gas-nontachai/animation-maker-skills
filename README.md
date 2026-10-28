@@ -4,7 +4,7 @@ Turn a request such as “สร้างแอนิเมชันตัวล
 
 ## Release status
 
-Runtime/Skills compatibility is pinned to `@gasnonthachai/animation-maker@1.1.0`, using Remotion 4.0.539. This is a release candidate: **do not assume it is published**. Check `npm view @gasnonthachai/animation-maker@1.1.0 version` before registry installation. The current release requires maintainer publication authorization and npm authentication, plus updating the GitHub Skills. A tarball test is not evidence that the public one-prompt workflow has shipped.
+`@gasnonthachai/animation-maker@1.1.1` is published and verified, with Git tag `v1.1.1` at its source commit. It is the baseline for future automatic releases. Runtime/Skills compatibility remains pinned to `1.1.0`, using Remotion 4.0.539; updating that pin is a separate reviewed change. Package publication or a tarball test alone is not evidence that the public one-prompt workflow has shipped.
 
 ## First-use workflow after release
 
@@ -68,7 +68,7 @@ Pure animation exports live in `packages/animation-runtime/src/index.ts`: `valid
 
 ## Security and development
 
-The [npm CI/CD release pipeline](docs/release-pipeline.md) validates PRs and prepares releases only on pushes to `prod`. Publication remains disabled until explicit repository enablement and protected-environment approval; it uses npm Trusted Publishing, not npm token secrets. See that report for versioning, recovery and required manual npm/GitHub setup.
+The [npm CI/CD release pipeline](docs/release-pipeline.md) validates PRs and prepares releases only on pushes to `prod`. Publication requires explicit repository enablement and protected-environment approval; it uses npm Trusted Publishing, not npm token secrets. Normal versioning starts from verified `v1.1.1`, and interrupted releases recover without republishing. Post-publish verification allows up to eight minutes for registry propagation. See that report for versioning, recovery and configuration requirements.
 
 See [security review](docs/security-phase1.7.md) and [release verification](docs/phase1.7-verification.md). The repo uses its package lock and a Zod override for development audits. Root overrides and attempted shrinkwrap pinning did not patch all downstream consumers: upstream Remotion packages pin vulnerable Zod 4.5.4. The Skills merge a target-project override `"@gasnonthachai/animation-maker": {"zod": "4.6.7"}` before the authorized install. They preserve unrelated config and stop on conflicting override values. This scopes the patch to this runtime's dependencies. A clean workflow consumer audit is a separate required check; installing the bare runtime without this mitigation retains upstream advisories and is not approved for public release without explicit residual-risk acceptance. The old machine-specific self-dependency was removed. TypeScript source shipping uses the existing production tsx loader; no second build framework or install hook is introduced.
 
@@ -85,4 +85,4 @@ npm run test:release
 
 `test:release` starts without a runtime or local tarball. It downloads Skills from GitHub, requires their version pin to match 1.1.0, then installs only from npm and repeats isolated browser/render checks. It fails if the public release is unavailable or outdated. These tests require explicit permission for external downloads and rendering. The isolation harness currently requires macOS; Linux/Windows remain unverified.
 
-Public publication is a separate final action after security review, artifact verification, npm login and explicit maintainer approval. No automatic publish occurs in scripts. The project's MIT license covers its code and artwork; Remotion has separate [license terms](https://www.remotion.dev/docs/license).
+Future publication uses the protected OIDC release workflow after security checks, artifact verification and explicit maintainer approval; local test scripts do not publish. The project's MIT license covers its code and artwork; Remotion has separate [license terms](https://www.remotion.dev/docs/license).
