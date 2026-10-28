@@ -1,8 +1,9 @@
-import {readFile, realpath} from 'node:fs/promises';
+import {readFile, realpath, lstat} from 'node:fs/promises';
 import path from 'node:path';
 import {parseArgs} from 'node:util';
 import {DOMParser, XMLSerializer} from '@xmldom/xmldom';
 import {validateAnimation} from '../packages/animation-runtime/src/schemas';
+import {sceneSchema, validateScene} from '../packages/animation-runtime/src/scene';
 const tags = new Set(['svg', 'g', 'path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon']);
 const attributes = new Set(['xmlns', 'viewBox', 'width', 'height', 'x', 'y', 'x1', 'x2', 'y1', 'y2', 'cx', 'cy', 'r', 'rx', 'ry', 'd', 'points', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'fill-rule', 'clip-rule', 'opacity', 'fill-opacity', 'stroke-opacity', 'transform']);
 export function safeSvg(source: string): string {
@@ -40,6 +41,29 @@ export async function confined(root: string, relative: string) {
 export async function loadProject(project: string) {
   const root = await realpath(project);
   const json = async (name: string) => JSON.parse(await readFile(await confined(root, name), 'utf8'));
+  let isScene = false;
+  try {await lstat(path.join(root, 'scene.json')); isScene = true;} catch (error) {if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;}
+  if (isScene) {
+    const scene = sceneSchema.parse(await json('scene.json'));
+    const inputs: Record<string, unknown> = Object.create(null);
+    const assets: Record<string, Record<string, string>> = Object.create(null);
+    for (const object of scene.objects) {
+      if (Object.hasOwn(inputs, object.rig)) continue;
+      const rigFile = await confined(root, object.rig);
+      inputs[object.rig] = JSON.parse(await readFile(rigFile, 'utf8'));
+    }
+    const validated = validateScene(scene, await json('timeline.json'), inputs);
+    for (const [reference, rig] of Object.entries(validated.rigs)) {
+      const parts: Record<string, string> = Object.create(null);
+      for (const part of rig.parts) {
+        if (path.isAbsolute(part.asset) || part.asset.includes('\\')) throw new Error(`Invalid asset path ${part.asset}`);
+        const file = await confined(root, path.join(path.dirname(reference), part.asset));
+        parts[part.id] = safeSvg(await readFile(file, 'utf8'));
+      }
+      assets[reference] = parts;
+    }
+    return {...validated, assets};
+  }
   const {rig: character, timeline} = validateAnimation(await json('character/rig.json'), await json('timeline.json'));
   const assets: Record<string, string> = Object.create(null);
   for (const part of character.parts) {

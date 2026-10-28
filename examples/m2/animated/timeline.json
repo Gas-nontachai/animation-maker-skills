@@ -1,0 +1,44 @@
+{
+  "version": "1.0",
+  "fps": 24,
+  "duration": 5,
+  "tracks": [
+    {
+      "target": {
+        "object": "character",
+        "part": "arm"
+      },
+      "property": "rotation",
+      "keyframes": [
+        {
+          "time": 0,
+          "value": 0
+        },
+        {
+          "time": 2,
+          "value": -150
+        },
+        {
+          "time": 5,
+          "value": -150
+        }
+      ]
+    },
+    {
+      "target": {
+        "object": "coffee"
+      },
+      "property": "position.x",
+      "keyframes": [
+        {
+          "time": 0,
+          "value": 760
+        },
+        {
+          "time": 5,
+          "value": 400
+        }
+      ]
+    }
+  ]
+}

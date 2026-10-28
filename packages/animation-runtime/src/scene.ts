@@ -19,7 +19,7 @@ export type SceneTimeline = z.infer<typeof sceneTimelineSchema>;
 export function validateScene(manifest: unknown, animation: unknown, inputs: Record<string, unknown>) {
   const scene = sceneSchema.parse(manifest), timeline = sceneTimelineSchema.parse(animation);
   const rigs: Record<string, Rig> = Object.create(null);
-  for (const object of scene.objects) {if (!Object.hasOwn(inputs, object.rig)) throw new Error(`Missing rig ${object.rig}`); rigs[object.rig] = rigSchema.parse(inputs[object.rig]);}
+  for (const object of scene.objects) {if (!Object.hasOwn(inputs, object.rig)) throw new Error(`Missing rig ${object.rig}`); if (!Object.hasOwn(rigs, object.rig)) rigs[object.rig] = rigSchema.parse(inputs[object.rig]);}
   for (const track of timeline.tracks) {
     const object = scene.objects.find(o => o.id === track.target.object);
     if (!object) throw new Error(`Unknown object ${track.target.object}`);
