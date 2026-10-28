@@ -1,6 +1,6 @@
 # Animation Maker Skills
 
-Turn a request such as “สร้างแอนิเมชันตัวละครโบกมือ 3 วินาที และ Export เป็น MP4” into a new SVG robot, rig, three-second waving timeline and silent MP4. No editor, Web UI or new rendering framework. The existing monorepo and example remain supported.
+Turn a request such as “สร้างแอนิเมชันตัวละครโบกมือ 3 วินาที และ Export เป็น MP4” into a new SVG asset, rig, timeline and silent MP4. Custom characters and objects are authored directly from the prompt; the original waving robot remains the default for the waving-character request. No editor, Web UI or new rendering framework. The existing monorepo and example remain supported.
 
 ## Release status
 
@@ -19,7 +19,7 @@ codex
 
 Ask: “สร้างแอนิเมชันตัวละครโบกมือ 3 วินาที และ Export เป็น MP4”. The animate Skill checks that the project-local manifest and CLI report the same version satisfying `^1.1.1`, reusing compatible installations without reinstalling or upgrading. If missing or incompatible, it verifies registry availability and requests approval for `npm install --save-dev '@gasnonthachai/animation-maker@^1.1.1'`, preserving the lockfile and scoped Zod mitigation. It never falls back to a developer checkout, a global runtime, a tarball or an implicit npx download. Installing Skills does not install the runtime. Existing session authorization is reused.
 
-The workflow runs doctor, requests a compatible browser download only when needed, creates source assets, validates with at most two source-repair attempts, renders with host approval when required, then inspects the MP4. It preserves character SVGs, rig.json and timeline.json. The first supported motion is one character waving in one scene; a friendly robot is the default. Codex can edit generated SVG primitives to match a visual description while retaining attachment points.
+The workflow runs doctor, requests a compatible browser download only when needed, creates source assets, validates with at most two source-repair attempts, renders with host approval when required, then inspects the MP4. It preserves character SVGs, rig.json and timeline.json. M1 supports one rig with arbitrary SVG parts, including static objects and nested characters. Custom requests use prompt-first SVG authoring, with an empty tracks array for static assets or supported local transform/opacity keyframes. The default waving robot still uses `create`; custom assets are authored directly without generating the robot first. See the [asset contract and owner verification checklist](docs/asset-contract.md). Manual prompt-to-video E2E and visual quality approval remain pending owner verification.
 
 The corresponding installed CLI commands are:
 
@@ -56,7 +56,7 @@ Network/cache permission errors are separate from binding errors. Downloading a 
 
 ## Project contract
 
-A project contains `character/rig.json`, SVG assets relative to `character/`, and `timeline.json`. See `examples/waving-character` for a complete six-part character. Validation checks schemas, finite numbers, duplicate IDs/tracks, references, parent cycles, ordered keyframes, asset existence and paths including symlinks.
+A project contains `character/rig.json`, SVG assets relative to `character/`, and `timeline.json`. See `examples/waving-character` for a complete six-part character and the [generic asset contract](docs/asset-contract.md) for single-part objects and nested human parts. Validation checks schemas, finite numbers, duplicate IDs/tracks, references, parent cycles, ordered keyframes, asset existence and paths including symlinks.
 
 Rig coordinates are SVG units, positive Y down. Part `position` anchors `pivot` in its parent's original SVG coordinates. Local transform is `T(position) R(rotation) S(scale) T(-pivot)`; parent matrices and opacity propagate to children. Global `zIndex` determines drawing order; rig order breaks ties. Static SVG primitives only: no scripts, event handlers, CSS, text, images, hrefs, declarations, entities or external resources. SVG viewBox is `0 0 width height`; geometry is composed in intrinsic units without nested viewport clipping.
 
