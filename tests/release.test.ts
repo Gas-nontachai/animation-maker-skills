@@ -1,9 +1,21 @@
 import {describe, expect, it, vi} from 'vitest';
-import {spawnSync} from 'node:child_process';
+import {execFileSync, spawnSync} from 'node:child_process';
+import {readFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import {resolve} from 'node:path';
 // @ts-expect-error Release tooling is dependency-free JavaScript, also used before npm ci.
-import {latestVersion, nextVersion, resolvePlan, registryJSON, publishAndTag, verifyReleaseBase} from '../scripts/release.mjs';
+import {latestVersion, nextVersion, resolvePlan, registryJSON, publishAndTag, verifyReleaseBase, finishRelease} from '../scripts/release.mjs';
 // @ts-expect-error Security tooling is dependency-free JavaScript.
 import {rejectLocalPaths, verifyManifests} from '../scripts/security-gate.mjs';
+
+vi.mock('node:child_process', async importOriginal => {
+  const actual = await importOriginal<typeof import('node:child_process')>();
+  return {...actual, execFileSync: vi.fn(actual.execFileSync)};
+});
+vi.mock('node:fs/promises', async importOriginal => {
+  const actual = await importOriginal<typeof import('node:fs/promises')>();
+  return {...actual, readFile: vi.fn(actual.readFile)};
+});
 
 const base = 'a'.repeat(40), head = 'b'.repeat(40);
 const runtime = (message: string) => ({message, files: ['scripts/render.ts']});
@@ -70,6 +82,42 @@ describe('version planning', () => {
 });
 
 describe('publish verification and recovery (mocked, no publication)', () => {
+  it('publishes the verified tarball as an absolute local path, not GitHub shorthand', async () => {
+    const tarball = Buffer.from('tested release artifact');
+    const integrity = `sha512-${createHash('sha512').update(tarball).digest('base64')}`;
+    const releasePlan = {...plan, previousVersion: null, tarball: 'output/gasnonthachai-animation-maker-1.2.0.tgz', integrity};
+    vi.stubEnv('GITHUB_ACTIONS', 'true');
+    vi.stubEnv('GITHUB_REPOSITORY', 'Gas-nontachai/animation-maker-skills');
+    vi.stubEnv('GITHUB_REF', 'refs/heads/prod');
+    vi.stubEnv('RELEASE_AUTHORIZED', 'true');
+    vi.stubEnv('NODE_AUTH_TOKEN', '');
+    vi.stubEnv('NPM_TOKEN', '');
+    const request = vi.fn()
+      .mockResolvedValueOnce(new Response('', {status: 404}))
+      .mockResolvedValueOnce(new Response('', {status: 404}))
+      .mockResolvedValueOnce(Response.json({...metadata, dist: {integrity}}))
+      .mockResolvedValueOnce(Response.json({object: {type: 'commit', sha: head}}));
+    vi.stubGlobal('fetch', request);
+    vi.mocked(readFile).mockResolvedValueOnce(JSON.stringify(releasePlan)).mockResolvedValueOnce(tarball);
+    const execute = vi.mocked(execFileSync)
+      .mockReturnValueOnce(head)
+      .mockReturnValueOnce('')
+      .mockReturnValueOnce('11.5.1')
+      .mockReturnValueOnce('');
+    try {
+      await finishRelease();
+      expect(readFile).toHaveBeenLastCalledWith(releasePlan.tarball);
+      expect(execute).toHaveBeenLastCalledWith('npm', [
+        'publish', resolve(releasePlan.tarball), '--access', 'public', '--provenance',
+        '--ignore-scripts', '--registry', 'https://registry.npmjs.org',
+      ], {stdio: 'inherit'});
+      expect(request).toHaveBeenCalledTimes(4);
+    } finally {
+      vi.unstubAllEnvs();
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('blocks the real finish command locally before any publish or tag operation', () => {
     const result = spawnSync(process.execPath, ['scripts/release.mjs', 'finish'], {env: {...process.env, GITHUB_ACTIONS: 'false'}, encoding: 'utf8'});
     expect(result.status).toBe(1);
