@@ -1,0 +1,49 @@
+{
+  "version": "1.0",
+  "canvas": {
+    "width": 1280,
+    "height": 720
+  },
+  "background": "#ffffff",
+  "objects": [
+    {
+      "id": "tree0",
+      "rig": "assets/tree/rig.json",
+      "position": {
+        "x": 200,
+        "y": 250
+      },
+      "zIndex": 0,
+      "scale": {
+        "x": 1.0,
+        "y": 1.0
+      }
+    },
+    {
+      "id": "tree1",
+      "rig": "assets/tree/rig.json",
+      "position": {
+        "x": 500,
+        "y": 250
+      },
+      "zIndex": 0,
+      "scale": {
+        "x": 1.2,
+        "y": 1.2
+      }
+    },
+    {
+      "id": "tree2",
+      "rig": "assets/tree/rig.json",
+      "position": {
+        "x": 800,
+        "y": 250
+      },
+      "zIndex": 0,
+      "scale": {
+        "x": 1.4,
+        "y": 1.4
+      }
+    }
+  ]
+}

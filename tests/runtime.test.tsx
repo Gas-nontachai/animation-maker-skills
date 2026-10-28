@@ -17,6 +17,7 @@ describe('animation', () => {
   });
   it('loads sample, evaluates deterministically without mutation and waves three times', async () => {
     const props = await loadProject(project);
+    if (!props.character) throw new Error("Expected M1 fixture");
     const original = JSON.stringify(props);
     const arm = (frame:number) => evaluateFrame({...props,frame}).find(p => p.id === 'right-arm')!;
     expect([0,12,24,36,48,60].map(f=>arm(f).rotation)).toEqual([0,-150,0,-150,0,-150]);
@@ -37,6 +38,7 @@ describe('animation', () => {
   });
   it('evaluates every supported property as a local absolute value', async () => {
     const {character,timeline}=await loadProject(project);
+    if (!character) throw new Error("Expected M1 fixture");
     const properties = ['position.x','position.y','rotation','scale.x','scale.y','opacity'] as const;
     const values = [300,200,-45,2,.5,.25];
     const animation=timelineSchema.parse({...timeline,placement:{x:10,y:20,scale:2},tracks:properties.map((property,i)=>({target:'body',property,keyframes:[{time:0,value:values[i]}]}))});
@@ -47,6 +49,7 @@ describe('animation', () => {
   });
   it('rejects invalid references, duplicate IDs, cycles and malformed timelines', async () => {
     const {character,timeline}=await loadProject(project);
+    if (!character) throw new Error("Expected M1 fixture");
     expect(()=>rigSchema.parse({...character,parts:[...character.parts,character.parts[0]]})).toThrow('duplicate');
     expect(()=>rigSchema.parse({...character,parts:character.parts.map(p=>({...p,parent:'missing'}))})).toThrow('missing parent');
     expect(()=>rigSchema.parse({...character,parts:character.parts.map(p=>({...p,parent:p.id}))})).toThrow('circular');
@@ -72,6 +75,7 @@ describe('asset boundary', () => {
       await symlink(path.join(root,'outside.svg'),path.join(root,'project','link.svg'));
       for(const name of ['../outside.svg','link.svg','missing.svg']) await expect(confined(path.join(root,'project'),name)).rejects.toThrow();
       const {character,timeline}=await loadProject(project);
+    if (!character) throw new Error("Expected M1 fixture");
       await mkdir(path.join(root,'project','character'));
       await writeFile(path.join(root,'project','character','rig.json'),JSON.stringify(character));
       await writeFile(path.join(root,'project','timeline.json'),JSON.stringify(timeline));

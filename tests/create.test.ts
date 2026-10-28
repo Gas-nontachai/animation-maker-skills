@@ -13,6 +13,7 @@ it('generates new safe SVG sources and a validated reusable three-wave preset wi
   try {
     await createWave(project);
     const props = await loadProject(project);
+    if (!props.character) throw new Error("Expected M1 fixture");
     expect(props.character.id).toBe('waving-robot');
     expect(props.character.parts).toHaveLength(6);
     expect(props.timeline.fps * props.timeline.duration).toBe(72);
@@ -34,6 +35,7 @@ it.each(dynamicAssets)('loads agent-authored $rig.id sources without the create 
       await writeFile(path.join(project, 'character', part.asset), assets[part.id], {flag: 'wx'});
     }
     const loaded = await loadProject(project);
+    if (!loaded.character) throw new Error("Expected M1 fixture");
     expect(loaded.character.id).toBe(rig.id);
     expect(loaded.character.parts).toHaveLength(rig.parts.length);
     expect(loaded.timeline.tracks).toHaveLength(timeline.tracks.length);

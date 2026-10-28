@@ -57,7 +57,9 @@
     "docs/asset-contract.md",
     "docs/security-phase1.7.md",
     "docs/phase1.7-verification.md",
-    "docs/release-pipeline.md"
+    "docs/release-pipeline.md",
+    "docs/scene-contract.md",
+    "examples/m2/"
   ],
   "repository": {
     "type": "git",

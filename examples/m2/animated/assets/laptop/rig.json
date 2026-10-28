@@ -1,0 +1,24 @@
+{
+  "version": "1.0",
+  "id": "laptop",
+  "canvas": {
+    "width": 150,
+    "height": 100
+  },
+  "parts": [
+    {
+      "id": "body",
+      "asset": "body.svg",
+      "parent": null,
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "pivot": {
+        "x": 0,
+        "y": 0
+      },
+      "zIndex": 0
+    }
+  ]
+}
