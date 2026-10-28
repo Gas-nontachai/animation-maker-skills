@@ -86,3 +86,7 @@ npm run test:release
 `test:release` starts without a runtime or local tarball. It downloads Skills from GitHub, requires their shared `^1.1.1` compatibility range, then installs only from npm, verifies the resolved manifest/CLI versions satisfy that range, and repeats isolated browser/render checks. It fails if the public runtime or updated GitHub Skills are unavailable. These tests require explicit permission for external downloads and rendering. The isolation harness currently requires macOS; Linux/Windows remain unverified.
 
 Future publication uses the protected OIDC release workflow after security checks, artifact verification and explicit maintainer approval; local test scripts do not publish. The project's MIT license covers its code and artwork; Remotion has separate [license terms](https://www.remotion.dev/docs/license).
+
+## Multi-object scenes (M2, unreleased)
+
+See [scene contract](docs/scene-contract.md) and editable examples under `examples/m2`. Existing M1 projects need no migration. Owner E2E approval is pending.
