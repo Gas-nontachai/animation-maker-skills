@@ -5,6 +5,7 @@ import path from 'node:path';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {ease, interpolate, evaluateFrame, validateAnimation, rigSchema, timelineSchema, SvgComposer} from '../packages/animation-runtime/src';
 import {loadProject, safeSvg, confined} from '../scripts/project';
+import {dynamicAssets} from './fixtures/dynamic-assets';
 const project = 'examples/waving-character';
 describe('animation', () => {
   it('interpolates and holds boundaries, including negative rotation', () => {
@@ -76,5 +77,37 @@ describe('asset boundary', () => {
       await writeFile(path.join(root,'project','timeline.json'),JSON.stringify(timeline));
       await expect(loadProject(path.join(root,'project'))).rejects.toThrow('Part body');
     } finally {await rm(root,{recursive:true,force:true});}
+  });
+});
+
+describe('dynamic asset contract', () => {
+  it.each(dynamicAssets)('composes every part of $rig.id deterministically', ({rig: source, timeline: animation, assets: sources}) => {
+    const {rig: character, timeline} = validateAnimation(source, animation);
+    const assets = Object.fromEntries(Object.entries(sources).map(([id, svg]) => [id, safeSvg(svg)]));
+    const props = {character, timeline, assets};
+    const original = JSON.stringify(props);
+    const markup = renderToStaticMarkup(<SvgComposer {...props} frame={12}/>);
+    expect((markup.match(/matrix\(/g) ?? [])).toHaveLength(source.parts.length);
+    for (const source of Object.values(assets)) expect(markup).toContain(source);
+    expect(renderToStaticMarkup(<SvgComposer {...props} frame={12}/>)).toBe(markup);
+    expect(JSON.stringify(props)).toBe(original);
+    if (character.id === 'coffee-cup') {
+      expect(evaluateFrame({...props, frame: 71})).toEqual(evaluateFrame({...props, frame: 0}));
+      evaluateFrame({...props, frame: 0})[0].matrix.forEach((value, i) => expect(value).toBeCloseTo([1, 0, 0, 1, 0, 0][i]));
+    } else {
+      const forearm = evaluateFrame({...props, frame: 12}).find(part => part.id === 'forearm')!;
+      expect(forearm.rotation).toBe(-30);
+      // The forearm pivot remains at the elbow through the three-level hierarchy.
+      expect(forearm.matrix[4] + forearm.matrix[0] * 10 + forearm.matrix[2] * 5).toBeCloseTo(165);
+      expect(forearm.matrix[5] + forearm.matrix[1] * 10 + forearm.matrix[3] * 5).toBeCloseTo(180);
+    }
+  });
+
+  it('rejects non-finite rig and timeline values for generic assets', () => {
+    const {rig, timeline} = dynamicAssets[0];
+    for (const value of [NaN, Infinity, -Infinity]) {
+      expect(() => validateAnimation({...rig, parts: [{...rig.parts[0], position: {x: value, y: 0}}]}, timeline)).toThrow();
+      expect(() => validateAnimation(rig, {...timeline, tracks: [{target: 'cup', property: 'rotation', keyframes: [{time: 0, value}]}]})).toThrow();
+    }
   });
 });
