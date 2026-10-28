@@ -34,8 +34,6 @@ jobs:
 
       - name: Plan release
         id: plan
-        env:
-          NPM_BOOTSTRAP_RECOVERY: ${{ vars.NPM_BOOTSTRAP_RECOVERY }}
         run: node scripts/release.mjs plan
 
       - name: Set release version
@@ -95,7 +93,7 @@ jobs:
       needs.prepare.result == 'success' &&
       contains(fromJSON('["publish", "recover"]'), needs.prepare.outputs.action)
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     environment: npm-production
     permissions:
       contents: write
@@ -152,6 +150,5 @@ jobs:
       - name: Publish with OIDC, verify npm, then create tag (or recover)
         env:
           RELEASE_AUTHORIZED: ${{ vars.NPM_RELEASE_ENABLED }}
-          NPM_BOOTSTRAP_RECOVERY: ${{ vars.NPM_BOOTSTRAP_RECOVERY }}
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/release.mjs finish

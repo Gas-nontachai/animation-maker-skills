@@ -2,12 +2,15 @@ import assert from 'node:assert/strict';
 import {readFileSync, realpathSync, mkdirSync} from 'node:fs';
 import {execFileSync, spawnSync} from 'node:child_process';
 import {checkVideo} from './check-video.mjs';
+import {checkSkill} from './check-skills.mjs';
 
 assert.throws(() => readFileSync(`${process.argv[2]}/package.json`), {code: 'EPERM'});
 console.log('Original checkout read denied by OS policy.');
 for (const skill of ['animate', 'create-character', 'render-video']) {
   const file = `.agents/skills/${skill}/SKILL.md`;
-  assert.match(readFileSync(file, 'utf8'), new RegExp(`^---\\nname: ${skill}\\n`));
+  const source = readFileSync(file, 'utf8');
+  assert.match(source, new RegExp(`^---\\nname: ${skill}\\n`));
+  checkSkill(source);
   assert.ok(realpathSync(file).startsWith(realpathSync('.')));
 }
 assert.ok(readFileSync('.agents/skills/animate/references/timeline-spec.md', 'utf8').includes('Timeline v1.0'));
