@@ -1,75 +1,17 @@
 import assert from 'node:assert/strict';
-import {appendFile, mkdir, mkdtemp, readFile, rm, writeFile} from 'node:fs/promises';
-import {execFileSync, spawnSync} from 'node:child_process';
+import {appendFile, mkdir, readFile, writeFile} from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 import {resolve} from 'node:path';
-import {tmpdir} from 'node:os';
+import {setTimeout as sleep} from 'node:timers/promises';
 
 const registry = 'https://registry.npmjs.org';
 export const packageName = '@gasnonthachai/animation-maker';
 const repository = 'Gas-nontachai/animation-maker-skills';
 const versionPattern = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 const shaPattern = /^[a-f0-9]{40}$/;
-const integrityPattern = /^sha512-[A-Za-z0-9+/]{86}==$/;
 const git = (...args) => execFileSync('git', args, {encoding: 'utf8'}).trim();
-const missingBaseline = 'Missing published release baseline: npm has neither gitHead nor a matching tag. ' +
-  'Do not guess a commit. For an external initial release, authorize NPM_BOOTSTRAP_RECOVERY with ' +
-  '{repository, version, commit, integrity}; the unchanged source must reproduce the full npm SHA-512. ' +
-  'See docs/release-pipeline.md. If the original source cannot be verified, recovery is blocked.';
-
-function verifyRebaselineAuthorization(authorization, head) {
-  assert.match(authorization?.commit || '', shaPattern, 'Rebaseline requires an explicit full prod commit');
-  assert.deepEqual(authorization, {
-    repository, existingVersion: '1.1.0', targetVersion: '1.1.1', commit: head,
-  }, 'Rebaseline requires exact repository, versions and current prod commit authorization');
-}
-
-function verifyBootstrapEvidence(evidence, version, metadata) {
-  assert.ok(evidence, missingBaseline);
-  assert.equal(evidence.repository, repository, 'Bootstrap repository mismatch');
-  assert.equal(evidence.version, version, 'Bootstrap version mismatch');
-  assert.match(evidence.commit || '', shaPattern, 'Bootstrap requires an explicit full source commit');
-  assert.match(evidence.integrity || '', integrityPattern, 'Bootstrap requires a complete SHA-512 integrity');
-  assert.equal(evidence.integrity, metadata.dist?.integrity, 'Bootstrap registry artifact integrity mismatch');
-  if (metadata.gitHead !== undefined) assert.equal(metadata.gitHead, evidence.commit, 'Bootstrap gitHead conflict');
-}
-
-export async function verifyBootstrapRecovery(plan, metadata, cwd = process.cwd()) {
-  assert.equal(plan.action, 'recover', 'Bootstrap is recovery only, never a publish');
-  assert.ok(process.env.NPM_BOOTSTRAP_RECOVERY, 'Bootstrap requires explicit NPM_BOOTSTRAP_RECOVERY authorization');
-  const authorized = JSON.parse(process.env.NPM_BOOTSTRAP_RECOVERY);
-  assert.deepEqual(plan.bootstrap, authorized, 'Bootstrap authorization changed since planning');
-  verifyBootstrapEvidence(authorized, plan.version, metadata);
-  assert.equal(plan.name, packageName);
-  assert.equal(metadata.name, packageName, 'Bootstrap registry package mismatch');
-  assert.equal(metadata.version, plan.version, 'Bootstrap registry version mismatch');
-  assert.equal(plan.head, authorized.commit, 'Bootstrap source commit mismatch');
-  assert.equal(plan.integrity, authorized.integrity, 'Bootstrap plan integrity mismatch');
-  const ancestor = spawnSync('git', ['merge-base', '--is-ancestor', authorized.commit, 'HEAD'], {cwd, encoding: 'utf8'});
-  if (ancestor.error) throw ancestor.error;
-  assert.equal(ancestor.status, 0,
-    `Bootstrap source must exist in this repository's prod history and be an ancestor of the checkout; verify the original commit and fetch full history. ${ancestor.stderr.trim()}`);
-
-  const dir = await mkdtemp(resolve(tmpdir(), 'animation-bootstrap-'));
-  try {
-    const source = resolve(dir, 'source');
-    await mkdir(source);
-    const archive = execFileSync('git', ['archive', '--format=tar', authorized.commit], {cwd, maxBuffer: 64 * 1024 * 1024});
-    execFileSync('tar', ['-xf', '-', '-C', source], {input: archive, stdio: ['pipe', 'pipe', 'pipe']});
-    const manifest = JSON.parse(await readFile(resolve(source, 'package.json'), 'utf8'));
-    assert.equal(manifest.name, packageName, 'Bootstrap source package mismatch');
-    assert.equal(manifest.version, plan.version, 'Bootstrap source version mismatch; source must pack unchanged');
-    // No hooks, installs, builds, or manifest edits: only bytes from the authorized commit.
-    execFileSync('npm', ['pack', '--ignore-scripts', '--offline', '--workspaces=false', '--pack-destination', dir, '--cache', resolve(dir, 'cache')], {cwd: source, stdio: 'pipe'});
-    const tarball = await readFile(resolve(dir, `gasnonthachai-animation-maker-${plan.version}.tgz`));
-    const integrity = `sha512-${createHash('sha512').update(tarball).digest('base64')}`;
-    assert.equal(integrity, authorized.integrity,
-      'Bootstrap source artifact integrity mismatch: unchanged source does not reproduce npm. Obtain the original source/toolchain; do not substitute a CI artifact or guess a baseline');
-  } finally {
-    await rm(dir, {recursive: true, force: true});
-  }
-}
 
 export function parts(version) {
   assert.match(version, versionPattern, 'Only stable semantic versions are released');
@@ -100,37 +42,19 @@ export function nextVersion(current, commits) {
   return breaking ? `${major + 1}.0.0` : feature ? `${major}.${minor + 1}.0` : `${major}.${minor}.${patch + 1}`;
 }
 
-export function resolvePlan({head, initialVersion, versions, tags, commits, bootstrap, rebaseline}) {
+export function resolvePlan({head, initialVersion, versions, tags, commits}) {
   assert.match(head, shaPattern);
   const latest = latestVersion(versions);
   const common = {name: packageName, head};
-  if (rebaseline && !versions['1.1.1']) {
-    verifyRebaselineAuthorization(rebaseline, head);
-    assert.ok(!bootstrap, 'Rebaseline cannot be combined with bootstrap recovery');
-    assert.equal(latest, '1.1.0', 'Rebaseline requires 1.1.0 as the only stable registry release');
-    assert.equal(Object.keys(versions).filter(v => versionPattern.test(v)).length, 1, 'Rebaseline requires only one stable registry release');
-    assert.equal(versions['1.1.0'].name, packageName, 'Rebaseline registry package mismatch');
-    assert.equal(versions['1.1.0'].version, '1.1.0', 'Rebaseline registry version mismatch');
-    assert.ok(!versions['1.1.0'].gitHead && !tags['v1.1.0'], 'Rebaseline is only for the unverified legacy release');
-    assert.ok(!tags['v1.1.1'], 'Rebaseline target tag already exists');
-    return {...common, action: 'rebaseline', version: '1.1.1', baseline: null, previousVersion: '1.1.0', rebaseline};
-  }
   if (latest) {
     const published = versions[latest];
     const tagged = tags[`v${latest}`];
-    let baseline = published.gitHead || tagged;
-    if (!baseline || bootstrap?.version === latest) {
-      verifyBootstrapEvidence(bootstrap, latest, published);
-      assert.equal(Object.keys(versions).filter(v => versionPattern.test(v)).length, 1, 'Bootstrap is only for the initial stable release');
-      if (baseline) assert.equal(bootstrap.commit, baseline, 'Bootstrap conflicts with the published baseline');
-      else baseline = bootstrap.commit;
-    }
-    assert.match(baseline, shaPattern, missingBaseline);
+    const baseline = published.gitHead;
+    assert.match(baseline || '', shaPattern, 'Missing or invalid published gitHead baseline; review release provenance manually');
     if (tagged) assert.equal(tagged, baseline, 'Published release tag points to a different commit');
     if (!tagged) {
       assert.ok(published.dist?.integrity, 'Recovery requires the published artifact integrity');
-      return {...common, action: 'recover', version: latest, head: baseline, integrity: published.dist.integrity,
-        ...(!published.gitHead ? {bootstrap} : {})};
+      return {...common, action: 'recover', version: latest, head: baseline, integrity: published.dist.integrity};
     }
     const version = nextVersion(latest, commits);
     if (!version) return {...common, action: 'skip', reason: 'No runtime changes since the published release', baseline};
@@ -147,8 +71,8 @@ export function verifyReleaseBase(plan, versions) {
   assert.equal(latestVersion(versions) || null, plan.previousVersion, 'Registry advanced since planning; rerun all release jobs');
 }
 
-export async function registryJSON(path, request = fetch) {
-  const response = await request(`${registry}/${path}`, {headers: {'cache-control': 'no-cache'}, signal: AbortSignal.timeout(20000)});
+export async function registryJSON(path, request = fetch, timeout = 20000) {
+  const response = await request(`${registry}/${path}`, {headers: {'cache-control': 'no-cache'}, signal: AbortSignal.timeout(timeout)});
   if (response.status === 404) return null;
   if (!response.ok) throw new Error(`npm registry HTTP ${response.status}; refusing to guess release state`);
   return response.json();
@@ -158,29 +82,34 @@ export async function verifyPublished(plan, metadata) {
   assert.ok(metadata, 'Published version is not visible in the registry');
   assert.equal(metadata.name, plan.name, 'Registry package mismatch');
   assert.equal(metadata.version, plan.version, 'Registry version mismatch');
+  assert.ok(plan.integrity, 'Release plan is missing artifact integrity');
   assert.equal(metadata.dist?.integrity, plan.integrity, 'Registry artifact integrity mismatch');
-  if (plan.bootstrap) await verifyBootstrapRecovery(plan, metadata);
-  else assert.equal(metadata.gitHead, plan.head, 'Registry gitHead mismatch');
+  assert.equal(metadata.gitHead, plan.head, 'Registry gitHead mismatch');
 }
 
-export async function publishAndTag(plan, {lookup, publish, tag, wait}) {
+export async function publishAndTag(plan, {lookup, publish, tag, wait = sleep, now = () => performance.now()}) {
   const existing = await lookup();
   if (existing) await verifyPublished(plan, existing);
   else {
-    assert.ok(['publish', 'rebaseline'].includes(plan.action), 'Cannot recover a version absent from npm');
+    assert.equal(plan.action, 'publish', 'Cannot recover a version absent from npm');
     await publish();
   }
   // Registry propagation can lag a successful npm publish; never tag an unverified artifact.
-  for (let attempt = 0; attempt < 6; attempt++) {
-    const metadata = await lookup();
+  const deadline = now() + 8 * 60 * 1000;
+  let delay = 5000;
+  while (now() < deadline) {
+    const metadata = await lookup(Math.max(1, Math.ceil(Math.min(20000, deadline - now()))));
     if (metadata) {
       await verifyPublished(plan, metadata);
       await tag();
       return;
     }
-    await wait();
+    const remaining = deadline - now();
+    if (remaining <= 0) break;
+    await wait(Math.min(delay, remaining));
+    delay = Math.min(delay * 2, 30000);
   }
-  throw new Error('Published version not visible after retries; rerun the workflow to recover, do not bump manually');
+  throw new Error('Published version not visible within 8 minutes; rerun all workflow jobs to recover, do not bump manually');
 }
 
 async function planRelease() {
@@ -191,17 +120,13 @@ async function planRelease() {
   const versions = packument?.versions || {};
   if (packument) assert.ok(latestVersion(versions), 'Registry package exists but has no stable release; review manually');
   const tags = Object.fromEntries(git('tag', '--list', 'v*').split('\n').filter(t => versionPattern.test(t.slice(1))).map(t => [t, git('rev-parse', `${t}^{commit}`)]));
-  const latest = latestVersion(versions);
-  const bootstrap = process.env.NPM_BOOTSTRAP_RECOVERY ? JSON.parse(process.env.NPM_BOOTSTRAP_RECOVERY) : undefined;
-  const rebaseline = process.env.NPM_RELEASE_REBASELINE ? JSON.parse(process.env.NPM_RELEASE_REBASELINE) : undefined;
-  const input = {head: git('rev-parse', 'HEAD'), initialVersion: manifest.version, versions, tags, commits: [], bootstrap, rebaseline};
+  const input = {head: git('rev-parse', 'HEAD'), initialVersion: manifest.version, versions, tags, commits: []};
   const preliminary = resolvePlan(input);
   const baseline = preliminary.action === 'recover' ? preliminary.head : preliminary.baseline;
-  if (preliminary.bootstrap) await verifyBootstrapRecovery(preliminary, versions[latest]);
-  else if (baseline) {
+  if (baseline) {
     git('merge-base', '--is-ancestor', baseline, 'HEAD');
   }
-  const commits = ['recover', 'rebaseline'].includes(preliminary.action) ? [] : git('log', '--format=%H', ...(baseline ? [`${baseline}..HEAD`] : ['HEAD'])).split('\n').filter(Boolean).map(sha => ({
+  const commits = preliminary.action === 'recover' ? [] : git('log', '--format=%H', ...(baseline ? [`${baseline}..HEAD`] : ['HEAD'])).split('\n').filter(Boolean).map(sha => ({
     message: git('show', '-s', '--format=%B', sha),
     files: git('diff-tree', '--root', '-m', '--no-commit-id', '--name-only', '-r', sha).split('\n'),
   }));
@@ -244,26 +169,15 @@ export async function finishRelease() {
   assert.equal(plan.name, packageName);
   parts(plan.version);
   assert.match(plan.head, shaPattern);
-  assert.ok(['publish', 'recover', 'rebaseline'].includes(plan.action));
-  if (plan.bootstrap) assert.equal(plan.action, 'recover', 'Bootstrap is recovery only, never a publish');
+  assert.ok(['publish', 'recover'].includes(plan.action));
   const current = git('rev-parse', 'HEAD');
   git('merge-base', '--is-ancestor', plan.head, current);
-  if (['publish', 'rebaseline'].includes(plan.action)) assert.equal(plan.head, current);
-  if (plan.action === 'rebaseline') {
-    assert.ok(process.env.NPM_RELEASE_REBASELINE, 'Rebaseline requires explicit NPM_RELEASE_REBASELINE authorization');
-    assert.deepEqual(plan.rebaseline, JSON.parse(process.env.NPM_RELEASE_REBASELINE), 'Rebaseline authorization changed since planning');
-    verifyRebaselineAuthorization(plan.rebaseline, current);
-    assert.equal(plan.version, plan.rebaseline.targetVersion, 'Rebaseline target version mismatch');
-    assert.equal(plan.previousVersion, plan.rebaseline.existingVersion, 'Rebaseline existing version mismatch');
-  }
+  if (plan.action === 'publish') assert.equal(plan.head, current);
   await publishAndTag(plan, {
-    lookup: () => registryJSON(`${encodeURIComponent(plan.name)}/${plan.version}`),
+    lookup: timeout => registryJSON(`${encodeURIComponent(plan.name)}/${plan.version}`, fetch, timeout),
     publish: async () => {
       const fresh = await registryJSON(encodeURIComponent(plan.name));
       verifyReleaseBase(plan, fresh?.versions || {});
-      if (plan.action === 'rebaseline') {
-        resolvePlan({head: current, versions: fresh.versions, tags: {}, rebaseline: plan.rebaseline});
-      }
       const npmVersion = parts(execFileSync('npm', ['--version'], {encoding: 'utf8'}).trim());
       assert.ok(npmVersion[0] > 11 || (npmVersion[0] === 11 && (npmVersion[1] > 5 || npmVersion[1] === 5 && npmVersion[2] >= 1)), 'OIDC requires npm >=11.5.1');
       assert.equal(plan.tarball, `output/gasnonthachai-animation-maker-${plan.version}.tgz`);
@@ -272,14 +186,13 @@ export async function finishRelease() {
       execFileSync('npm', ['publish', resolve(plan.tarball), '--access', 'public', '--provenance', '--ignore-scripts', '--registry', registry], {stdio: 'inherit'});
     },
     tag: () => ensureTag(plan),
-    wait: () => new Promise(resolve => setTimeout(resolve, 5000)),
   });
 }
 
 async function attachArtifact() {
   const plan = JSON.parse(await readFile('output/release-plan.json', 'utf8'));
   const evidence = JSON.parse(await readFile('output/phase1.7-package-evidence.json', 'utf8'));
-  assert.ok(['publish', 'rebaseline'].includes(plan.action));
+  assert.equal(plan.action, 'publish');
   assert.equal(evidence.result, 'PASS');
   assert.equal(evidence.vulnerabilities.total, 0);
   assert.equal(evidence.package, `gasnonthachai-animation-maker-${plan.version}.tgz`);

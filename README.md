@@ -1,10 +1,10 @@
-# Animation Maker Skills — Phase 1.7 release candidate
+# Animation Maker Skills
 
 Turn a request such as “สร้างแอนิเมชันตัวละครโบกมือ 3 วินาที และ Export เป็น MP4” into a new SVG robot, rig, three-second waving timeline and silent MP4. No editor, Web UI or new rendering framework. The existing monorepo and example remain supported.
 
 ## Release status
 
-Runtime/Skills compatibility is pinned to `@gasnonthachai/animation-maker@1.1.0`, using Remotion 4.0.539. This is a release candidate: **do not assume it is published**. Check `npm view @gasnonthachai/animation-maker@1.1.0 version` before registry installation. The current release requires maintainer publication authorization and npm authentication, plus updating the GitHub Skills. A tarball test is not evidence that the public one-prompt workflow has shipped.
+`@gasnonthachai/animation-maker@1.1.1` is published and verified, with Git tag `v1.1.1` at its source commit. It is the baseline for future automatic releases. All three Skills accept compatible stable runtimes in `^1.1.1` (`>=1.1.1 <2.0.0`) instead of an exact pin. Package publication or a tarball test alone is not evidence that the public one-prompt workflow has shipped.
 
 ## First-use workflow after release
 
@@ -17,7 +17,7 @@ npx skills add Gas-nontachai/animation-maker-skills
 codex
 ```
 
-Ask: “สร้างแอนิเมชันตัวละครโบกมือ 3 วินาที และ Export เป็น MP4”. The animate Skill checks the project-local manifest and CLI version and reuses version 1.1.0. If absent, it verifies registry availability and requests approval for `npm install --save-dev --save-exact @gasnonthachai/animation-maker@1.1.0`. It never falls back to a developer checkout, a global runtime, a tarball or an implicit npx download. Installing Skills does not install the runtime. Existing session authorization is reused.
+Ask: “สร้างแอนิเมชันตัวละครโบกมือ 3 วินาที และ Export เป็น MP4”. The animate Skill checks that the project-local manifest and CLI report the same version satisfying `^1.1.1`, reusing compatible installations without reinstalling or upgrading. If missing or incompatible, it verifies registry availability and requests approval for `npm install --save-dev '@gasnonthachai/animation-maker@^1.1.1'`, preserving the lockfile and scoped Zod mitigation. It never falls back to a developer checkout, a global runtime, a tarball or an implicit npx download. Installing Skills does not install the runtime. Existing session authorization is reused.
 
 The workflow runs doctor, requests a compatible browser download only when needed, creates source assets, validates with at most two source-repair attempts, renders with host approval when required, then inspects the MP4. It preserves character SVGs, rig.json and timeline.json. The first supported motion is one character waving in one scene; a friendly robot is the default. Codex can edit generated SVG primitives to match a visual description while retaining attachment points.
 
@@ -68,7 +68,7 @@ Pure animation exports live in `packages/animation-runtime/src/index.ts`: `valid
 
 ## Security and development
 
-The [npm CI/CD release pipeline](docs/release-pipeline.md) validates PRs and prepares releases only on pushes to `prod`. Publication remains disabled until explicit repository enablement and protected-environment approval; it uses npm Trusted Publishing, not npm token secrets. See that report for versioning, recovery and required manual npm/GitHub setup.
+The [npm CI/CD release pipeline](docs/release-pipeline.md) validates PRs and prepares releases only on pushes to `prod`. Publication requires explicit repository enablement and protected-environment approval; it uses npm Trusted Publishing, not npm token secrets. Normal versioning starts from verified `v1.1.1`, and interrupted releases recover without republishing. Post-publish verification allows up to eight minutes for registry propagation. See that report for versioning, recovery and configuration requirements.
 
 See [security review](docs/security-phase1.7.md) and [release verification](docs/phase1.7-verification.md). The repo uses its package lock and a Zod override for development audits. Root overrides and attempted shrinkwrap pinning did not patch all downstream consumers: upstream Remotion packages pin vulnerable Zod 4.5.4. The Skills merge a target-project override `"@gasnonthachai/animation-maker": {"zod": "4.6.7"}` before the authorized install. They preserve unrelated config and stop on conflicting override values. This scopes the patch to this runtime's dependencies. A clean workflow consumer audit is a separate required check; installing the bare runtime without this mitigation retains upstream advisories and is not approved for public release without explicit residual-risk acceptance. The old machine-specific self-dependency was removed. TypeScript source shipping uses the existing production tsx loader; no second build framework or install hook is introduced.
 
@@ -83,6 +83,6 @@ npm run test:release
 
 `test:package` is an authorized pre-release tarball test. It applies the same scoped project override as the Skills and checks package contents and a clean consumer audit, installs all three candidate Skills, denies checkout reads via an additional macOS policy, repairs a seeded incomplete browser cache through explicit setup, renders both the old example and a newly generated robot, and checks metadata plus decoded pixels. It retains the temporary project and copies generated MP4/source evidence under gitignored output/. It is not the npm-registry release test.
 
-`test:release` starts without a runtime or local tarball. It downloads Skills from GitHub, requires their version pin to match 1.1.0, then installs only from npm and repeats isolated browser/render checks. It fails if the public release is unavailable or outdated. These tests require explicit permission for external downloads and rendering. The isolation harness currently requires macOS; Linux/Windows remain unverified.
+`test:release` starts without a runtime or local tarball. It downloads Skills from GitHub, requires their shared `^1.1.1` compatibility range, then installs only from npm, verifies the resolved manifest/CLI versions satisfy that range, and repeats isolated browser/render checks. It fails if the public runtime or updated GitHub Skills are unavailable. These tests require explicit permission for external downloads and rendering. The isolation harness currently requires macOS; Linux/Windows remain unverified.
 
-Public publication is a separate final action after security review, artifact verification, npm login and explicit maintainer approval. No automatic publish occurs in scripts. The project's MIT license covers its code and artwork; Remotion has separate [license terms](https://www.remotion.dev/docs/license).
+Future publication uses the protected OIDC release workflow after security checks, artifact verification and explicit maintainer approval; local test scripts do not publish. The project's MIT license covers its code and artwork; Remotion has separate [license terms](https://www.remotion.dev/docs/license).
