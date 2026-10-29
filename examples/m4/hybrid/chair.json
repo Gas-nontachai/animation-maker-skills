@@ -1,0 +1,46 @@
+{
+  "version": "1.0",
+  "id": "chair",
+  "materials": {
+    "main": {
+      "color": "#6e987d",
+      "roughness": 0.8
+    }
+  },
+  "joints": [
+    {
+      "id": "body",
+      "parent": null,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": {
+        "type": "box",
+        "size": [
+          0.85,
+          0.13,
+          0.85
+        ]
+      },
+      "material": "main",
+      "geometryPosition": [
+        0,
+        0,
+        0
+      ],
+      "anchors": {}
+    }
+  ]
+}

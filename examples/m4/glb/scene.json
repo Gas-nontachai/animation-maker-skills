@@ -1,0 +1,14 @@
+{
+  "version": "1.0",
+  "renderingMode": "3d",
+  "canvas": {
+    "width": 1280,
+    "height": 720
+  },
+  "objects": [
+    {
+      "id": "triangle",
+      "model": "triangle.glb"
+    }
+  ]
+}

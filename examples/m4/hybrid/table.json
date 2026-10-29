@@ -1,0 +1,46 @@
+{
+  "version": "1.0",
+  "id": "table",
+  "materials": {
+    "main": {
+      "color": "#956342",
+      "roughness": 0.8
+    }
+  },
+  "joints": [
+    {
+      "id": "body",
+      "parent": null,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": {
+        "type": "box",
+        "size": [
+          2.1,
+          0.12,
+          0.9
+        ]
+      },
+      "material": "main",
+      "geometryPosition": [
+        0,
+        0,
+        0
+      ],
+      "anchors": {}
+    }
+  ]
+}

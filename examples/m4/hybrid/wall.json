@@ -1,0 +1,46 @@
+{
+  "version": "1.0",
+  "id": "wall",
+  "materials": {
+    "main": {
+      "color": "#c2aa85",
+      "roughness": 0.8
+    }
+  },
+  "joints": [
+    {
+      "id": "body",
+      "parent": null,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": {
+        "type": "box",
+        "size": [
+          9,
+          4,
+          0.12
+        ]
+      },
+      "material": "main",
+      "geometryPosition": [
+        0,
+        0,
+        0
+      ],
+      "anchors": {}
+    }
+  ]
+}

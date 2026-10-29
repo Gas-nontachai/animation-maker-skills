@@ -1,4 +1,6 @@
-# M4 Camera MVP — experimental
+# Legacy 2D camera — experimental
+
+The M4 world-space cinematic contract is documented in [m4-cinematic.md](m4-cinematic.md). This page describes the preserved x/y/zoom format and its limitations.
 
 M4 camera is an **optional extension of an M2 scene timeline**. No additional skill, runtime dependency, rig migration or audio feature is required. Legacy projects without `camera` render with the previous identity framing.
 

@@ -1,6 +1,6 @@
 ---
 name: animate
-description: Create and export SVG characters and multi-object scenes from natural language, including coordinated motion on M3-capable runtimes. Handles custom SVG authoring, the default waving robot, local runtime setup, validation and MP4 export, including Thai requests.
+description: Create and export SVG, multi-object, and capability-gated hybrid cinematic animations from natural language. Handles custom SVG authoring, the default waving robot, local runtime setup, validation and MP4 export, including Thai requests.
 ---
 
 Complete supported single-asset requests through export. For the existing three-second waving-character prompt, including “สร้างแอนิเมชันตัวละครโบกมือ 3 วินาที และ Export เป็น MP4”, infer a friendly SVG robot, 24 FPS and three waves unless specified. For custom characters or objects, author new geometry to match the prompt using the create-character workflow below. Choose unused project/output paths and preserve generated SVG, rig and timeline files. No Web UI, new animation framework or per-asset renderer changes.
@@ -38,3 +38,13 @@ Compile using `animation-maker plan --project <project> --output <unused candida
 Run the existing validate → render → inspect workflow, deriving frame/metadata expectations from the plan. Decode frames at action boundaries and within attachment intervals if claiming visible motion checks. Preserve and report SVGs, rigs, scene.json, motion.json, timeline.json and MP4. Distinguish compiler validation, metadata inspection and decoded-frame evidence from owner regression/E2E/visual acceptance. See docs/m3-owner-e2e.md for the primary eight-second coffee scenario. Repeated pickup of the same object, moving ancestors during reach, sheared attachments, generalized IK, physics and automatic foot planting remain unsupported and must produce explicit diagnostics or a disclosed planning limitation.
 
 For Phase 2 pose-aware requests, read the Phase 2 section in [motion-quality.md](references/motion-quality.md). Infer semantic poses and rig-specific constraints from natural action intent; the user need not supply joint angles. Prefer named pose transitions for reusable configurations and keep authored tracks for simple one-off keys. Verify capability support before emitting new fields.
+
+## M4 cinematic workflow (capability-gated candidate)
+
+For real viewpoint changes, verify the authorized runtime exports cinematicSceneSchema, cinematicTimelineSchema, evaluateCinematic and createStylizedCharacter3D and includes docs/m4-cinematic.md. Read that contract before authoring. A published M1–M3 version does not establish M4 capability. Do not install or publish a candidate automatically.
+
+Choose 2D for flat requests, 3D for coherent front/side/back camera changes, hybrid for a 3D world plus SVG overlays or planes. Infer objects, identity, styling, action beats, contact locations, framing and shot timing from the user's prompt. The user does not need to author JSON. Author separate procedural 3D models and local joint tracks; use the reference coffee project and its construction script as geometry/contact guidance, adapting them to the requested story. Do not use an SVG zoom as a substitute for a required 3D view. Report any unsupported action or imported-rig requirement explicitly.
+
+Preserve the ordinary validate → render → inspect workflow. Use complete half-open shot coverage, independent view/framing presets, deterministic keyed transforms and evaluated contact anchors. Match detached world transforms at release. Reuse model references for instances. For hybrid scenes distinguish screen-space pixel overlays from world-space SVG planes and shared-depth 3D models. Never claim depth correctness for screen overlays. Only import explicitly supplied, validated local GLBs; no model downloads or scripts. This candidate rejects textures, extensions, embedded GLB animations and loose glTF dependency files.
+
+Inspect decoded frames before/after cuts, at pickup, during drinking, during movement, and at release. Return editable sources and MP4 with metadata and visual findings. Explain any remaining visual defects or unsupported requirements. Do not claim completion from metadata alone; M4 release acceptance remains separate from a successful candidate render.

@@ -1,6 +1,6 @@
 ---
 name: render-video
-description: Export validated SVG character animations as H.264 MP4 with the project-local Animation Maker CLI. Handles Chromium setup, sandbox permission failures and output metadata verification.
+description: Export validated SVG and capability-gated cinematic or hybrid animations as H.264 MP4 with the project-local Animation Maker CLI. Handles Chromium setup, sandbox permission failures and output metadata verification.
 ---
 
 The compatible runtime is `@gasnonthachai/animation-maker@^1.1.1`, installed in the user's project. Check `node_modules/@gasnonthachai/animation-maker/package.json` and `./node_modules/.bin/animation-maker --version`. Both must report the same version satisfying SemVer `^1.1.1` (`>=1.1.1 <2.0.0`, excluding prereleases). Reuse a compatible installation without reinstalling, upgrading, querying npm or changing package.json/package-lock.json. Reject 1.1.0 and 2.0.0; accept 1.1.1, 1.1.2 and 1.2.0. On Windows use the `.cmd` shim. Never resolve a developer checkout or a global executable.
@@ -35,3 +35,7 @@ M3 plans compile before rendering; render still consumes ordinary M2 scene/timel
 For M3.1 joint-driven motion, compile motion.json authored rotation tracks before rendering so attachment baking includes forearm and wrist changes. Do not append character-only edits after baking prop tracks. Compare separate original/corrected outputs and decode pickup, curl extremes, sip and release frames; metadata success does not prove natural-looking motion. See the animate Skill’s [motion quality guidance](../animate/references/motion-quality.md). Leave Regression, Manual E2E and Visual Acceptance to the owner.
 
 Phase 2 uses optional named semantic poses and per-joint limits/preferences in motion.json, with no mandatory Rig migration. Inspect geometry before selecting bounds and keep secondary motion disabled unless intentionally authored. Read the animate motion-quality reference for intent decomposition and capability checks; publication of M3 1.4.0 does not establish support for candidate Phase 2 fields.
+
+## M4 cinematic candidate
+
+For a verified M4-capable runtime read docs/m4-cinematic.md and run doctor --3d. Existing validate/render/inspect commands accept cinematic and hybrid projects. No network assets are fetched. Confirm full shot coverage and safe imported assets before rendering. Derive metadata from the timeline and decode frames at camera cuts, motion extrema, pickup and release. Screen overlays are independent of the camera; world SVG planes participate in projection and plane depth. Inspect these behaviors visually before reporting acceptance. Candidate capability does not imply a published release.

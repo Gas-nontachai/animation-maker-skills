@@ -78,6 +78,10 @@ export const sceneTimelineSchema = z
         target: z.object({object: id, part: id.optional()}).strict(),
       }),
     ),
+    camera: z
+      .object({shots: z.array(cameraShotSchema).min(1)})
+      .strict()
+      .optional(),
   })
   .strict()
   .superRefine((timeline, ctx) => {
@@ -99,8 +103,9 @@ export const sceneTimelineSchema = z
       if (!targets.has(key)) targets.set(key, `target${targets.size}`);
       return {...t, target: targets.get(key)!};
     });
+    const {camera: _camera, ...base} = timeline;
     const result = timelineSchema.safeParse({
-      ...timeline,
+      ...base,
       characterId: 'scene',
       tracks,
     });
