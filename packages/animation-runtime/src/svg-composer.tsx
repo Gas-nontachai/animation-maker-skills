@@ -1,4 +1,4 @@
-import {evaluateSceneFrame, type MultiSceneProps} from './scene';
+import {evaluateSceneFrame, evaluateCamera, type MultiSceneProps} from './scene';
 import type {Rig, Timeline} from './schemas';
 import {evaluateFrame} from './evaluate-frame';
 export type SceneProps = {
@@ -45,6 +45,7 @@ export type AnimationProps = SceneProps | MultiSceneProps;
 export function AnimationComposer(props: AnimationProps & {frame: number}) {
   if (!('scene' in props)) return <SvgComposer {...props} />;
   const objects = evaluateSceneFrame(props);
+  const camera = evaluateCamera(props.timeline.camera?.shots, props.frame);
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -53,6 +54,7 @@ export function AnimationComposer(props: AnimationProps & {frame: number}) {
       viewBox="0 0 1280 720"
       style={{background: props.scene.background ?? 'transparent'}}
     >
+      <g transform={`translate(640 360) scale(${camera.zoom}) translate(${-camera.x} ${-camera.y})`}>
       {objects.map((object) => (
         <g
           key={object.id}
@@ -71,6 +73,7 @@ export function AnimationComposer(props: AnimationProps & {frame: number}) {
           ))}
         </g>
       ))}
+      </g>
     </svg>
   );
 }
