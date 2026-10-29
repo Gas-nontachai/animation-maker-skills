@@ -59,7 +59,11 @@
     "docs/phase1.7-verification.md",
     "docs/release-pipeline.md",
     "docs/scene-contract.md",
-    "examples/m2/"
+    "examples/m2/",
+    "scripts/plan.ts",
+    "docs/motion-contract.md",
+    "docs/m3-owner-e2e.md",
+    "examples/m3/"
   ],
   "repository": {
     "type": "git",

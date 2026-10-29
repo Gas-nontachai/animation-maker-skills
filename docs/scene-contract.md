@@ -10,4 +10,4 @@ Object transforms wrap the existing rig evaluator's part matrices: world = objec
 
 Rig paths and SVG assets must resolve inside the project, including symlink targets. SVG paths are relative to their rig's directory. Existing SVG sanitation applies unchanged before bundling. Rig assets are loaded and sanitized once per reference per job. Evaluation is pure and uses existing evaluateFrame; composition uses one SVG viewport and Remotion.
 
-See examples/m2 for editable fixtures. These are simple geometric verification assets, not a claim of production visual quality. No IK, physics, procedural motion, interaction synthesis, camera, audio, or editor is implemented.
+See examples/m2 for editable fixtures. These are simple geometric verification assets, not a claim of production visual quality. The M2 runtime has no physics, procedural evaluation, runtime object constraints, camera, audio or editor. M3 optionally compiles procedural motion plans into these unchanged timeline contracts; see [motion contract](motion-contract.md).

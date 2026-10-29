@@ -1,0 +1,136 @@
+{
+  "version": "1.0",
+  "id": "person",
+  "canvas": {
+    "width": 240,
+    "height": 240
+  },
+  "parts": [
+    {
+      "id": "body",
+      "parent": null,
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "pivot": {
+        "x": 0,
+        "y": 0
+      },
+      "asset": "body.svg",
+      "zIndex": 0
+    },
+    {
+      "id": "upper",
+      "parent": "body",
+      "position": {
+        "x": 0,
+        "y": -50
+      },
+      "pivot": {
+        "x": 0,
+        "y": 0
+      },
+      "asset": "upper.svg",
+      "zIndex": 4
+    },
+    {
+      "id": "fore",
+      "parent": "upper",
+      "position": {
+        "x": 70,
+        "y": 0
+      },
+      "pivot": {
+        "x": 0,
+        "y": 0
+      },
+      "asset": "fore.svg",
+      "zIndex": 5
+    },
+    {
+      "id": "palm",
+      "parent": "fore",
+      "position": {
+        "x": 60,
+        "y": 0
+      },
+      "pivot": {
+        "x": 0,
+        "y": 0
+      },
+      "asset": "palm.svg",
+      "zIndex": 6
+    },
+    {
+      "id": "other",
+      "parent": "body",
+      "position": {
+        "x": -20,
+        "y": -50
+      },
+      "pivot": {
+        "x": 0,
+        "y": 0
+      },
+      "asset": "other.svg",
+      "zIndex": -1
+    },
+    {
+      "id": "lt",
+      "parent": "body",
+      "position": {
+        "x": -15,
+        "y": 30
+      },
+      "pivot": {
+        "x": 0,
+        "y": 0
+      },
+      "asset": "lt.svg",
+      "zIndex": 1
+    },
+    {
+      "id": "rt",
+      "parent": "body",
+      "position": {
+        "x": 15,
+        "y": 30
+      },
+      "pivot": {
+        "x": 0,
+        "y": 0
+      },
+      "asset": "rt.svg",
+      "zIndex": 2
+    },
+    {
+      "id": "ll",
+      "parent": "lt",
+      "position": {
+        "x": 0,
+        "y": 65
+      },
+      "pivot": {
+        "x": 0,
+        "y": 0
+      },
+      "asset": "ll.svg",
+      "zIndex": 1
+    },
+    {
+      "id": "rl",
+      "parent": "rt",
+      "position": {
+        "x": 0,
+        "y": 65
+      },
+      "pivot": {
+        "x": 0,
+        "y": 0
+      },
+      "asset": "rl.svg",
+      "zIndex": 2
+    }
+  ]
+}
