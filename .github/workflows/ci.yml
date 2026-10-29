@@ -24,6 +24,8 @@ jobs:
           cache: npm
       - run: node scripts/security-gate.mjs manifest
       - run: npm ci --ignore-scripts
+      - run: npm run format:check
+      - run: npm run knip
       - run: npm test
       - run: npm run typecheck
       - run: npm run security:check
@@ -36,4 +38,3 @@ jobs:
             output/audit-*.json
             output/phase1.7-package-evidence.json
           if-no-files-found: ignore
-

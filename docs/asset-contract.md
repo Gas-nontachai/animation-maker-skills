@@ -60,11 +60,18 @@ scale must be positive).
 
 ```json
 {
-  "id": "coffee-cup", "version": "1.0",
+  "id": "coffee-cup",
+  "version": "1.0",
   "canvas": {"width": 160, "height": 160},
   "parts": [
-    {"id": "cup", "asset": "parts/cup.svg", "parent": null,
-     "position": {"x": 80, "y": 80}, "pivot": {"x": 80, "y": 80}, "zIndex": 0}
+    {
+      "id": "cup",
+      "asset": "parts/cup.svg",
+      "parent": null,
+      "position": {"x": 80, "y": 80},
+      "pivot": {"x": 80, "y": 80},
+      "zIndex": 0
+    }
   ]
 }
 ```
@@ -73,8 +80,12 @@ scale must be positive).
 
 ```json
 {
-  "version": "1.0", "characterId": "coffee-cup", "fps": 24, "duration": 3,
-  "placement": {"x": 440, "y": 60, "scale": 1}, "tracks": []
+  "version": "1.0",
+  "characterId": "coffee-cup",
+  "fps": 24,
+  "duration": 3,
+  "placement": {"x": 440, "y": 60, "scale": 1},
+  "tracks": []
 }
 ```
 
@@ -85,22 +96,51 @@ an arm split at the elbow. Do not create/recolor the robot first. The following
 four-part rig illustrates a nested hierarchy; it is not a mandatory skeleton.
 Use `<svg viewBox="0 0 240 320">…</svg>` around each indicated primitive:
 
-| File under `character/parts/` | SVG body |
-| --- | --- |
-| torso.svg | `<rect x="20" y="0" width="100" height="140" rx="25" fill="#facc15"/>` |
-| head.svg | `<ellipse cx="40" cy="45" rx="35" ry="42" fill="#b87950"/>` |
-| upper-arm.svg | `<rect x="0" y="0" width="24" height="65" rx="12" fill="#facc15"/>` |
-| forearm.svg | `<rect x="0" y="0" width="20" height="60" rx="10" fill="#b87950"/>` |
+| File under `character/parts/` | SVG body                                                               |
+| ----------------------------- | ---------------------------------------------------------------------- |
+| torso.svg                     | `<rect x="20" y="0" width="100" height="140" rx="25" fill="#facc15"/>` |
+| head.svg                      | `<ellipse cx="40" cy="45" rx="35" ry="42" fill="#b87950"/>`            |
+| upper-arm.svg                 | `<rect x="0" y="0" width="24" height="65" rx="12" fill="#facc15"/>`    |
+| forearm.svg                   | `<rect x="0" y="0" width="20" height="60" rx="10" fill="#b87950"/>`    |
 
 ```json
 {
-  "id": "yellow-shirt-human", "version": "1.0",
+  "id": "yellow-shirt-human",
+  "version": "1.0",
   "canvas": {"width": 240, "height": 320},
   "parts": [
-    {"id":"torso","asset":"parts/torso.svg","parent":null,"position":{"x":50,"y":110},"pivot":{"x":0,"y":0},"zIndex":0},
-    {"id":"head","asset":"parts/head.svg","parent":"torso","position":{"x":70,"y":0},"pivot":{"x":40,"y":85},"zIndex":3},
-    {"id":"upper-arm","asset":"parts/upper-arm.svg","parent":"torso","position":{"x":115,"y":20},"pivot":{"x":12,"y":10},"zIndex":1},
-    {"id":"forearm","asset":"parts/forearm.svg","parent":"upper-arm","position":{"x":12,"y":60},"pivot":{"x":10,"y":5},"zIndex":2}
+    {
+      "id": "torso",
+      "asset": "parts/torso.svg",
+      "parent": null,
+      "position": {"x": 50, "y": 110},
+      "pivot": {"x": 0, "y": 0},
+      "zIndex": 0
+    },
+    {
+      "id": "head",
+      "asset": "parts/head.svg",
+      "parent": "torso",
+      "position": {"x": 70, "y": 0},
+      "pivot": {"x": 40, "y": 85},
+      "zIndex": 3
+    },
+    {
+      "id": "upper-arm",
+      "asset": "parts/upper-arm.svg",
+      "parent": "torso",
+      "position": {"x": 115, "y": 20},
+      "pivot": {"x": 12, "y": 10},
+      "zIndex": 1
+    },
+    {
+      "id": "forearm",
+      "asset": "parts/forearm.svg",
+      "parent": "upper-arm",
+      "position": {"x": 12, "y": 60},
+      "pivot": {"x": 10, "y": 5},
+      "zIndex": 2
+    }
   ]
 }
 ```

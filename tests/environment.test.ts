@@ -10,7 +10,9 @@ const ensure = vi.mocked(ensureBrowser);
 const dirs: string[] = [];
 afterEach(async () => {
   vi.resetAllMocks();
-  await Promise.all(dirs.splice(0).map(dir => rm(dir, {recursive: true, force: true})));
+  await Promise.all(
+    dirs.splice(0).map((dir) => rm(dir, {recursive: true, force: true})),
+  );
 });
 
 async function executable() {
@@ -24,7 +26,7 @@ async function executable() {
 
 describe('Chromium bootstrap', () => {
   it('blocks a missing browser download unless explicitly requested', async () => {
-    ensure.mockImplementation(async options => {
+    ensure.mockImplementation(async (options) => {
       options!.onBrowserDownload!({chromeMode: 'headless-shell'});
       throw new Error('download should have been blocked');
     });
@@ -50,24 +52,41 @@ describe('Chromium bootstrap', () => {
   it('preserves download failure details and gives network/path remediation', async () => {
     const cause = new Error('ENOTFOUND storage.googleapis.com');
     ensure.mockRejectedValue(cause);
-    await expect(browser(undefined, true)).rejects.toMatchObject({cause, message: expect.stringMatching(/ENOTFOUND.*network access.*--browser-executable/)});
+    await expect(browser(undefined, true)).rejects.toMatchObject({
+      cause,
+      message: expect.stringMatching(
+        /ENOTFOUND.*network access.*--browser-executable/,
+      ),
+    });
   });
 
   it('explains incomplete-cache installation failures rather than reporting success', async () => {
     ensure.mockResolvedValue({type: 'no-browser'});
-    await expect(browser(undefined, true)).rejects.toThrow(/incomplete.*cache.*doctor --download-browser/);
+    await expect(browser(undefined, true)).rejects.toThrow(
+      /incomplete.*cache.*doctor --download-browser/,
+    );
   });
 
   it('reports an unresolved browser version mismatch rather than returning a missing path', async () => {
-    ensure.mockResolvedValue({type: 'version-mismatch', actualVersion: '134.0.0.0'});
-    await expect(browser(undefined, true)).rejects.toThrow('no compatible executable');
+    ensure.mockResolvedValue({
+      type: 'version-mismatch',
+      actualVersion: '134.0.0.0',
+    });
+    await expect(browser(undefined, true)).rejects.toThrow(
+      'no compatible executable',
+    );
   });
 
   it('rejects a reported executable that is missing or a directory', async () => {
     const file = await executable();
-    for (const invalid of [path.join(path.dirname(file), 'missing'), path.dirname(file)]) {
+    for (const invalid of [
+      path.join(path.dirname(file), 'missing'),
+      path.dirname(file),
+    ]) {
       ensure.mockResolvedValue({type: 'user-defined-path', path: invalid});
-      await expect(browser(invalid)).rejects.toThrow('Chromium executable is not usable');
+      await expect(browser(invalid)).rejects.toThrow(
+        'Chromium executable is not usable',
+      );
     }
   });
 });

@@ -11,7 +11,10 @@
     "doctor": "node bin/animation-maker.mjs doctor",
     "test:package": "node --import tsx scripts/package-smoke.ts",
     "test:release": "node --import tsx scripts/release-smoke.ts",
-    "security:check": "node scripts/security-gate.mjs"
+    "security:check": "node scripts/security-gate.mjs",
+    "knip": "knip",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "license": "MIT",
   "type": "module",
@@ -33,6 +36,8 @@
     "@types/node": "^22.0.0",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "knip": "6.43.0",
+    "prettier": "3.9.10",
     "typescript": "5.9.3",
     "vitest": "5.0.5"
   },

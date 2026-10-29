@@ -2,6 +2,7 @@
 name: animate
 description: Create and export SVG characters and multi-object scenes from natural language, including coordinated motion on M3-capable runtimes. Handles custom SVG authoring, the default waving robot, local runtime setup, validation and MP4 export, including Thai requests.
 ---
+
 Complete supported single-asset requests through export. For the existing three-second waving-character prompt, including “สร้างแอนิเมชันตัวละครโบกมือ 3 วินาที และ Export เป็น MP4”, infer a friendly SVG robot, 24 FPS and three waves unless specified. For custom characters or objects, author new geometry to match the prompt using the create-character workflow below. Choose unused project/output paths and preserve generated SVG, rig and timeline files. No Web UI, new animation framework or per-asset renderer changes.
 
 The compatible runtime is `@gasnonthachai/animation-maker@^1.1.1`, installed in the user's project. Check `node_modules/@gasnonthachai/animation-maker/package.json` and `./node_modules/.bin/animation-maker --version`. Both must report the same version satisfying SemVer `^1.1.1` (`>=1.1.1 <2.0.0`, excluding prereleases). Reuse a compatible installation without reinstalling, upgrading, querying npm or changing package.json/package-lock.json. Reject 1.1.0 and 2.0.0; accept 1.1.1, 1.1.2 and 1.2.0. On Windows use the `.cmd` shim. Never resolve a developer checkout or a global executable.

@@ -4,14 +4,14 @@ Review date: 2026-10-27. Candidate: `@gasnonthachai/animation-maker@1.1.0`. No n
 
 ## Findings and changes
 
-| Dependency / finding | Before | Treatment |
-| --- | --- | --- |
-| remotion, @remotion/renderer, @remotion/bundler | Direct 4.0.373, critical advisory propagation | Upgrade all three to exactly 4.0.539; keep package versions aligned. Render and pixel checks exercise both existing and generated characters. |
-| Remotion RCE / file-write advisories | GHSA-2jqp-f4gr-44fr and GHSA-g6pc-6676-c23j affect versions before 4.0.410 | New pinned version is beyond the patched threshold. |
-| extract-zip | Transitive high: GHSA-jmr9-qjv8-65gv / GHSA-7pqw-9j4j-h8q3 | New renderer no longer depends on extract-zip; its own extractor checks extracted parent-directory containment. Browser bootstrap still uses the public ensureBrowser API. |
-| ws / webpack | Transitive high / low | Updated Remotion dependency tree eliminates the reported vulnerable versions. |
-| Zod | Direct application 4.6.7 already patched; upstream Remotion pins transitive 4.5.4 | Root development override patches all copies. Skills additionally apply a scoped target-project override before approved installation; package overrides alone do not propagate. |
-| Runtime self-dependency | Direct dev dependency pointed to an external /tmp tarball | Removed. No developer checkout or machine path remains in the installable dependency manifest. |
+| Dependency / finding                            | Before                                                                            | Treatment                                                                                                                                                                        |
+| ----------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| remotion, @remotion/renderer, @remotion/bundler | Direct 4.0.373, critical advisory propagation                                     | Upgrade all three to exactly 4.0.539; keep package versions aligned. Render and pixel checks exercise both existing and generated characters.                                    |
+| Remotion RCE / file-write advisories            | GHSA-2jqp-f4gr-44fr and GHSA-g6pc-6676-c23j affect versions before 4.0.410        | New pinned version is beyond the patched threshold.                                                                                                                              |
+| extract-zip                                     | Transitive high: GHSA-jmr9-qjv8-65gv / GHSA-7pqw-9j4j-h8q3                        | New renderer no longer depends on extract-zip; its own extractor checks extracted parent-directory containment. Browser bootstrap still uses the public ensureBrowser API.       |
+| ws / webpack                                    | Transitive high / low                                                             | Updated Remotion dependency tree eliminates the reported vulnerable versions.                                                                                                    |
+| Zod                                             | Direct application 4.6.7 already patched; upstream Remotion pins transitive 4.5.4 | Root development override patches all copies. Skills additionally apply a scoped target-project override before approved installation; package overrides alone do not propagate. |
+| Runtime self-dependency                         | Direct dev dependency pointed to an external /tmp tarball                         | Removed. No developer checkout or machine path remains in the installable dependency manifest.                                                                                   |
 
 Primary advisory references: [Remotion RCE](https://github.com/advisories/GHSA-2jqp-f4gr-44fr), [Remotion file write](https://github.com/advisories/GHSA-g6pc-6676-c23j), [Zod resource exhaustion](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5). These are package-level advisory findings; propagation counts are not counts of distinct exploits.
 

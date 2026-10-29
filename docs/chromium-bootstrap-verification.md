@@ -20,16 +20,16 @@ No browser bootstrap internals are imported. The recovery instructions and incom
 
 ## Results
 
-| Check | Result |
-| --- | --- |
-| Original tests plus new bootstrap regressions | PASS: 13/13 in two files (seven existing, six new) |
-| TypeScript | PASS: `npm run typecheck` |
-| Missing browser | PASS: no opt-in means an actionable error instead of a download |
-| Successful installation | PASS: mocked API contract and actual fresh Chromium download via the installed CLI |
-| Failed installation | PASS: mocked network failure retains its cause; actual incomplete-cache fixture reports remediation |
-| Executable validation | PASS: missing files and directories rejected; valid cached/custom paths accepted |
-| Packaging and standalone | PASS: `npm run test:package` packs/installs a tarball in a clean project, installs all three Skills, denies checkout reads, downloads Chromium with progress, then runs doctor/validate/render |
-| Video | PASS: H.264, 1280×720, 24 FPS, 72 frames, 3 seconds, no audio; decoded pixels confirm three arm raises and overwrite protection |
+| Check                                         | Result                                                                                                                                                                                         |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Original tests plus new bootstrap regressions | PASS: 13/13 in two files (seven existing, six new)                                                                                                                                             |
+| TypeScript                                    | PASS: `npm run typecheck`                                                                                                                                                                      |
+| Missing browser                               | PASS: no opt-in means an actionable error instead of a download                                                                                                                                |
+| Successful installation                       | PASS: mocked API contract and actual fresh Chromium download via the installed CLI                                                                                                             |
+| Failed installation                           | PASS: mocked network failure retains its cause; actual incomplete-cache fixture reports remediation                                                                                            |
+| Executable validation                         | PASS: missing files and directories rejected; valid cached/custom paths accepted                                                                                                               |
+| Packaging and standalone                      | PASS: `npm run test:package` packs/installs a tarball in a clean project, installs all three Skills, denies checkout reads, downloads Chromium with progress, then runs doctor/validate/render |
+| Video                                         | PASS: H.264, 1280×720, 24 FPS, 72 frames, 3 seconds, no audio; decoded pixels confirm three arm raises and overwrite protection                                                                |
 
 The standalone browser download was 85.4 MB and used no browser copied from the checkout. Generated artifact integrity and temporary project location are in `output/phase1.6-evidence.json`; the tarball and standalone video remain under `output/`.
 

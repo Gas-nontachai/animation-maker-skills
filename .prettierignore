@@ -1,0 +1,5 @@
+package-lock.json
+# Reference artwork is kept in its original form.
+**/*.svg
+# Example fixtures include preserved reference data.
+examples/

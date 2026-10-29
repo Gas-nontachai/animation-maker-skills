@@ -59,6 +59,8 @@ jobs:
         if: steps.plan.outputs.action == 'publish'
         run: |
           npm ci --ignore-scripts
+          npm run format:check
+          npm run knip
           npm test
           npm run typecheck
           npm run security:check

@@ -113,3 +113,14 @@ Curls and wrist tilts can use optional authored rotation `tracks` in motion.json
 ### M3.1 Phase 2 pose planning (candidate)
 
 Optional semantic poses, joint limits/preferences/stability and explicit low-intensity secondary motion compile into existing M2 keyframes. The agent selects rig-appropriate poses from action intent; users need not specify joint rotations. See the [Phase 2 contract and owner comparison procedure](docs/m3-1-phase2.md), with separate Gym, alternate robot and walk/sit/reach examples. Final owner regression, E2E and visual review remain pending.
+
+### Development checks
+
+```bash
+npm ci --ignore-scripts
+npm run format        # Format source and documentation
+npm run format:check  # Check formatting without writing
+npm run knip          # Find unused files, exports, and dependencies
+```
+
+Pull requests and the npm release workflow run formatting and Knip checks before tests. Example fixtures and SVG artwork are excluded from formatting to preserve reference data.

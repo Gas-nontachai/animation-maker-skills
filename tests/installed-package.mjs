@@ -4,7 +4,9 @@ import {execFileSync, spawnSync} from 'node:child_process';
 import {checkVideo} from './check-video.mjs';
 import {checkSkill} from './check-skills.mjs';
 
-assert.throws(() => readFileSync(`${process.argv[2]}/package.json`), {code: 'EPERM'});
+assert.throws(() => readFileSync(`${process.argv[2]}/package.json`), {
+  code: 'EPERM',
+});
 console.log('Original checkout read denied by OS policy.');
 for (const skill of ['animate', 'create-character', 'render-video']) {
   const file = `.agents/skills/${skill}/SKILL.md`;
@@ -13,11 +15,24 @@ for (const skill of ['animate', 'create-character', 'render-video']) {
   checkSkill(source);
   assert.ok(realpathSync(file).startsWith(realpathSync('.')));
 }
-assert.ok(readFileSync('.agents/skills/animate/references/timeline-spec.md', 'utf8').includes('Timeline v1.0'));
+assert.ok(
+  readFileSync(
+    '.agents/skills/animate/references/timeline-spec.md',
+    'utf8',
+  ).includes('Timeline v1.0'),
+);
 const cli = 'node_modules/.bin/animation-maker';
-const run = (...args) => execFileSync(process.execPath, [cli, ...args], {stdio: 'inherit'});
-mkdirSync(`node_modules/.remotion/chrome-headless-shell/${process.arch === 'arm64' ? 'mac-arm64' : 'mac-x64'}`, {recursive: true});
-const bootstrap = execFileSync(process.execPath, [cli, 'doctor', '--download-browser'], {encoding: 'utf8'});
+const run = (...args) =>
+  execFileSync(process.execPath, [cli, ...args], {stdio: 'inherit'});
+mkdirSync(
+  `node_modules/.remotion/chrome-headless-shell/${process.arch === 'arm64' ? 'mac-arm64' : 'mac-x64'}`,
+  {recursive: true},
+);
+const bootstrap = execFileSync(
+  process.execPath,
+  [cli, 'doctor', '--download-browser'],
+  {encoding: 'utf8'},
+);
 process.stdout.write(bootstrap);
 assert.match(bootstrap, /Downloading Chrome Headless Shell/);
 run('doctor');
@@ -26,25 +41,66 @@ run('render', '--project', './example', '--output', './wave.mp4');
 checkVideo('wave.mp4');
 run('create', '--project', './generated-wave');
 run('validate', '--project', './generated-wave');
-run('render', '--project', './generated-wave', '--output', './generated-wave.mp4');
+run(
+  'render',
+  '--project',
+  './generated-wave',
+  '--output',
+  './generated-wave.mp4',
+);
 checkVideo('generated-wave.mp4');
-const metadata = JSON.parse(execFileSync(process.execPath, [cli, 'inspect', '--input', './generated-wave.mp4'], {encoding: 'utf8'}));
+const metadata = JSON.parse(
+  execFileSync(
+    process.execPath,
+    [cli, 'inspect', '--input', './generated-wave.mp4'],
+    {encoding: 'utf8'},
+  ),
+);
 assert.equal(metadata.streams[0].nb_frames, '72');
 for (const name of ['gym-phase2', 'pose-robot', 'pose-transition']) {
-  cpSync(`node_modules/@gasnonthachai/animation-maker/examples/m3/${name}`, name, {recursive: true, errorOnExist: true, force: false});
+  cpSync(
+    `node_modules/@gasnonthachai/animation-maker/examples/m3/${name}`,
+    name,
+    {recursive: true, errorOnExist: true, force: false},
+  );
   run('validate', '--project', name);
   run('plan', '--project', name, '--output', `${name}-timeline.json`);
-  assert.deepEqual(JSON.parse(readFileSync(`${name}-timeline.json`, 'utf8')), JSON.parse(readFileSync(`${name}/timeline.json`, 'utf8')));
+  assert.deepEqual(
+    JSON.parse(readFileSync(`${name}-timeline.json`, 'utf8')),
+    JSON.parse(readFileSync(`${name}/timeline.json`, 'utf8')),
+  );
 }
 run('render', '--project', 'pose-robot', '--output', 'pose-robot.mp4');
-const robotMetadata = JSON.parse(execFileSync(process.execPath, [cli, 'inspect', '--input', 'pose-robot.mp4'], {encoding: 'utf8'}));
+const robotMetadata = JSON.parse(
+  execFileSync(
+    process.execPath,
+    [cli, 'inspect', '--input', 'pose-robot.mp4'],
+    {encoding: 'utf8'},
+  ),
+);
 assert.equal(robotMetadata.streams[0].nb_frames, '240');
-console.log('Phase 2 installed-package PASS: three pose/constraint fixture compiles and alternate-rig render with checkout access denied.');
-const installedManifest = JSON.parse(readFileSync('node_modules/@gasnonthachai/animation-maker/package.json', 'utf8'));
-assert.equal(execFileSync(process.execPath, [cli, '--version'], {encoding: 'utf8'}).trim(), installedManifest.version);
+console.log(
+  'Phase 2 installed-package PASS: three pose/constraint fixture compiles and alternate-rig render with checkout access denied.',
+);
+const installedManifest = JSON.parse(
+  readFileSync(
+    'node_modules/@gasnonthachai/animation-maker/package.json',
+    'utf8',
+  ),
+);
+assert.equal(
+  execFileSync(process.execPath, [cli, '--version'], {encoding: 'utf8'}).trim(),
+  installedManifest.version,
+);
 const originalVideo = readFileSync('wave.mp4');
-const overwrite = spawnSync(process.execPath, [cli, 'render', '--project', './example', '--output', './wave.mp4'], {encoding: 'utf8'});
+const overwrite = spawnSync(
+  process.execPath,
+  [cli, 'render', '--project', './example', '--output', './wave.mp4'],
+  {encoding: 'utf8'},
+);
 assert.equal(overwrite.status, 1);
 assert.match(overwrite.stderr, /Output already exists/);
 assert.deepEqual(readFileSync('wave.mp4'), originalVideo);
-console.log('Standalone PASS: three installed Skills, CLI, doctor, validation, render, metadata, pixels and overwrite protection; checkout unavailable.');
+console.log(
+  'Standalone PASS: three installed Skills, CLI, doctor, validation, render, metadata, pixels and overwrite protection; checkout unavailable.',
+);

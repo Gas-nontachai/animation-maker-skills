@@ -2,15 +2,15 @@
 
 Verified 2026-10-27 on macOS arm64, Node.js 22.23.4, npm 10.9.9 and Remotion 4.0.373. Package name/version: `@gasnonthachai/animation-maker@1.0.0`, provisional and not published by this work. `private: true` remains set.
 
-| Requirement | Result and evidence |
-| --- | --- |
-| Three independent Skills | PASS: skills CLI 1.7.4 discovered and copied animate, create-character and render-video into a clean project's `.agents/skills/`; timeline reference verified. |
-| Installable runtime artifact | PASS: `npm pack`, then clean `npm install -D <tarball> --ignore-scripts`; 182 packages installed. CLI, renderer, schemas and environment helper checked in pack contents. |
-| Original checkout unavailable | PASS: an additional OS policy denied all checkout reads; reading its package.json produced EPERM. Installed CLI and dependencies remained outside that directory. |
-| CLI and validation | PASS: installed doctor, validate and render succeeded with checkout reads denied. `npx --no-install animation-maker validate --project ./example` also succeeded under that policy. |
-| Authorized MP4 render | PASS: copied bundled waving-character to the target project and rendered there with a separately provisioned browser cache. |
-| Metadata and movement | PASS: H.264, 1280×720, 24 FPS, 72 frames, 3 seconds, no audio. Pixel checks confirmed arm down at frames 0/24/48 and raised at 12/36/60. Existing output refusal preserved the original bytes. |
-| Installation and troubleshooting docs | PASS: README and all three Skills describe local installation, provisional publication status, project-relative paths, explicit browser setup and permission failures. |
+| Requirement                           | Result and evidence                                                                                                                                                                            |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Three independent Skills              | PASS: skills CLI 1.7.4 discovered and copied animate, create-character and render-video into a clean project's `.agents/skills/`; timeline reference verified.                                 |
+| Installable runtime artifact          | PASS: `npm pack`, then clean `npm install -D <tarball> --ignore-scripts`; 182 packages installed. CLI, renderer, schemas and environment helper checked in pack contents.                      |
+| Original checkout unavailable         | PASS: an additional OS policy denied all checkout reads; reading its package.json produced EPERM. Installed CLI and dependencies remained outside that directory.                              |
+| CLI and validation                    | PASS: installed doctor, validate and render succeeded with checkout reads denied. `npx --no-install animation-maker validate --project ./example` also succeeded under that policy.            |
+| Authorized MP4 render                 | PASS: copied bundled waving-character to the target project and rendered there with a separately provisioned browser cache.                                                                    |
+| Metadata and movement                 | PASS: H.264, 1280×720, 24 FPS, 72 frames, 3 seconds, no audio. Pixel checks confirmed arm down at frames 0/24/48 and raised at 12/36/60. Existing output refusal preserved the original bytes. |
+| Installation and troubleshooting docs | PASS: README and all three Skills describe local installation, provisional publication status, project-relative paths, explicit browser setup and permission failures.                         |
 
 Additional checks: existing unit tests 7/7, TypeScript check, example validation and existing render integration all passed. Shared pixel checks also passed directly against the retained standalone export. No runtime/schema, renderer component, character or timeline semantics changed.
 
