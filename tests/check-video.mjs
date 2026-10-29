@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import path from 'node:path';
 import {RenderInternals} from '@remotion/renderer';
-function ff(bin, args) {
+export function ff(bin, args) {
   const executable = RenderInternals.getExecutablePath({type: bin, indent: false, logLevel: 'error', binariesDirectory: null});
   const cwd = path.dirname(executable);
   // macOS bundled binaries need their adjacent shared libraries, as in Remotion's callFf.
