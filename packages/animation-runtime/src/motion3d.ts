@@ -18,15 +18,10 @@ export const motion3dSchema = z.object({version: z.literal('1.0'), actions: z.ar
 export type Motion3DPlan = z.infer<typeof motion3dSchema>;
 type Action = Motion3DPlan['actions'][number];
 type Track = CinematicTimeline['tracks'][number];
-const asVec = (v: Vector3): Vec3 => [v.x, v.y, v.z];
 const mix = (a: Vec3, b: Vec3, t: number): Vec3 =>
   a.map((v, i) => v + (b[i] - v) * t) as Vec3;
 const smooth = (x: number) => x * x * (3 - 2 * x);
 const pair = (a: Action, f: number) => smooth(Math.max(0, Math.min(1, (f - a.startFrame) / (a.endFrame - a.startFrame))));
-const orient = (direction: Vector3): Vec3 => {
-  const q = new Quaternion().setFromUnitVectors(new Vector3(0, -1, 0), direction.normalize());
-  return asVec(new Vector3(...new Euler().setFromQuaternion(q).toArray().slice(0, 3) as Vec3));
-};
 function solveReach(model: Model3D, a: Extract<Action, {type: 'reach'}>, point: Vec3): [Vec3, Vec3] {
   const byId = new Map(model.joints.map(j => [j.id, j]));
   const shoulder = byId.get(a.shoulder), elbow = byId.get(a.elbow), hand = byId.get(a.hand);
