@@ -45,4 +45,12 @@ Independently run the original waving project and M2 static/animated/trees fixtu
 
 ## Release/documentation discrepancy
 
-At implementation start package.json declared 1.1.2; README described 1.1.1 as published, and M2 documentation marked its feature unreleased/owner pending. No registry query or publication was performed here, so the current public registry state is unverified. Version, release workflows, branch protection and publishing settings are unchanged. M3 requires the capability-bearing source checkout until the owner separately approves and verifies a release.
+At implementation start package.json declared 1.1.2; README described 1.1.1 as published, and M2 documentation marked its feature unreleased/owner pending. That historical implementation did not query the registry. During Phase 2 review, a read-only registry query confirmed published 1.4.0 at gitHead 2eb32e7, which contains base M2/M3. Candidate M3.1 capabilities must still be checked independently. Version, release workflows, branch protection and publishing settings are unchanged. Published M3 can use the verified capability-bearing installed release; candidate Phase 1/2 additions require an authorized checkout or a separately verified future release.
+
+## M3.1 Gym comparison
+
+For elbow-dominant curls, wrist/grip authoring and bottle-opening alignment, follow [M3.1 motion quality](m3-1-motion-quality.md). It preserves the original Gym source/video, provides separate corrected sources and comparison output paths, and documents the optional authored-track extension. A successful render does not grant natural-motion approval.
+
+## Phase 2 comparisons
+
+See [Phase 2 contract and owner handoff](m3-1-phase2.md). It preserves original/Phase 1 fixtures and adds gym-phase2, pose-robot and pose-transition sources/videos with exact reproduction commands. Numeric pose/contact validation does not grant naturalness approval.

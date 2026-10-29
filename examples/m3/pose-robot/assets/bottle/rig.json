@@ -1,0 +1,8 @@
+{
+  "version": "1.0",
+  "id": "bottle",
+  "canvas": { "width": 30, "height": 60 },
+  "parts": [
+    { "id": "bottle", "asset": "bottle.svg", "parent": null, "position": { "x": 0, "y": 0 }, "pivot": { "x": 0, "y": 0 }, "zIndex": 0 }
+  ]
+}

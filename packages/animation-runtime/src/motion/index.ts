@@ -5,6 +5,7 @@ import {interpolate} from '../interpolation';
 export * from './contracts';
 type Point = {x: number; y: number};
 type Track = SceneTimeline['tracks'][number];
+type Span = {id: string; type: string; target: string; start: number; duration: number};
 const identity: Matrix = [1, 0, 0, 1, 0, 0];
 const point = (m: Matrix, p: Point): Point => ({x: m[0]*p.x + m[2]*p.y + m[4], y: m[1]*p.x + m[3]*p.y + m[5]});
 function inverse(m: Matrix): Matrix {
@@ -19,7 +20,7 @@ export function compileMotion(manifest: unknown, inputs: Record<string, unknown>
   const plan = motionPlanSchema.parse(input);
   const {scene, rigs} = validateScene(manifest, {version: '1.0', fps: plan.fps, duration: plan.duration, tracks: []}, inputs);
   const timeline: SceneTimeline = {version: '1.0', fps: plan.fps, duration: plan.duration, tracks: []};
-  const fail = (a: MotionAction, message: string): never => {throw new Error(`Action ${a.id} (${a.type}, ${a.target}): ${message}`);};
+  const fail = (a: Span, message: string): never => {throw new Error(`Action ${a.id} (${a.type}, ${a.target}): ${message}`);};
   const object = (id: string) => {const o = scene.objects.find(o => o.id === id); if (!o) throw new Error(`Unknown object ${id}`); return o;};
   const mapping = (a: MotionAction, required: (keyof SemanticRig)[]) => {
     const map = plan.rigs[a.target];
@@ -27,6 +28,18 @@ export function compileMotion(manifest: unknown, inputs: Record<string, unknown>
     for (const role of required) if (!map[role]) fail(a, `required semantic part ${role}`);
     return map;
   };
+  const ruleFor = (target: Track['target']) => {
+    const role = roles.find(role => target.part && plan.rigs[target.object]?.[role] === target.part);
+    return role ? plan.constraints?.[target.object]?.[role] : undefined;
+  };
+  function checkAngles(a: Span, target: Track['target'], values: number[], from: number) {
+    const rule = ruleFor(target);
+    if (!rule) return;
+    for (const value of values) {
+      if (value < rule.min-1e-7 || value > rule.max+1e-7) fail(a, `${target.part}: rotation ${value} outside joint limits [${rule.min}, ${rule.max}]`);
+      if (rule.stability !== undefined && Math.abs(value-from) > rule.stability+1e-7) fail(a, `${target.part}: stability limit ${rule.stability} exceeded from ${from}`);
+    }
+  }
   // Validate all references, capabilities and dependencies before generating tracks.
   for (const [target, map] of Object.entries(plan.rigs)) {
     const rig = rigs[object(target).rig];
@@ -37,13 +50,28 @@ export function compileMotion(manifest: unknown, inputs: Record<string, unknown>
       seen.add(map[role]!);
     }
   }
+  for (const [target, constraints] of Object.entries(plan.constraints ?? {})) {
+    const rig = rigs[object(target).rig];
+    for (const role of roles) if (constraints[role]) {
+      const part = rig.parts.find(p => p.id === plan.rigs[target]?.[role]);
+      if (!part) throw new Error(`${target}.${role}: constraint requires mapped rig part`);
+      const rule = constraints[role]!;
+      if (part.rotation < rule.min || part.rotation > rule.max) throw new Error(`${target}.${role}: initial rig angle outside joint limits`);
+    }
+  }
   const ids = new Map<string, MotionAction>();
   for (const a of plan.actions) {
     if (ids.has(a.id)) fail(a, 'duplicate action ID');
     ids.set(a.id, a); object(a.target);
     if (a.start+a.duration > plan.duration+1e-9) fail(a, 'end exceeds plan duration');
     if (![a.start, a.duration].every(t => Math.abs(t*plan.fps-Math.round(t*plan.fps)) < 1e-8)) fail(a, 'start and duration must align with frame boundaries');
-    const map = mapping(a, a.type === 'walk' ? ['leftThigh','rightThigh','leftLowerLeg','rightLowerLeg','upperArm','otherUpperArm'] : a.type === 'sit' ? ['torso','leftThigh','rightThigh','leftLowerLeg','rightLowerLeg'] : ['upperArm','forearm','hand']);
+    const pose = a.type === 'pose' ? plan.poses?.[a.pose] : undefined;
+    if (a.type === 'pose' && !Object.hasOwn(plan.poses ?? {}, a.pose)) fail(a, `unknown pose ${a.pose}`);
+    const map = mapping(a, pose ? Object.keys({...pose.preferred,...pose.joints}) as (keyof SemanticRig)[] : a.type === 'walk' ? ['leftThigh','rightThigh','leftLowerLeg','rightLowerLeg','upperArm','otherUpperArm'] : a.type === 'sit' ? ['torso','leftThigh','rightThigh','leftLowerLeg','rightLowerLeg'] : ['upperArm','forearm','hand']);
+    if (pose) for (const [role,angle] of Object.entries({...pose.preferred,...pose.joints})) {
+      const rule = plan.constraints?.[a.target]?.[role as keyof SemanticRig];
+      if (rule && (angle! < rule.min || angle! > rule.max)) fail(a, `pose ${a.type === 'pose' ? a.pose : ''}.${role}: unsatisfiable joint target ${angle}`);
+    }
     const rig = rigs[object(a.target).rig];
     if (a.type === 'walk' || a.type === 'sit') {
       for (const [lower, upper] of [['leftLowerLeg','leftThigh'],['rightLowerLeg','rightThigh']] as const) {
@@ -63,6 +91,14 @@ export function compileMotion(manifest: unknown, inputs: Record<string, unknown>
   }
   plan.actions.forEach(visit);
   const actions = [...plan.actions].sort((a,b) => a.start-b.start || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const authored = validateScene(scene, {...timeline, tracks: plan.tracks ?? []}, rigs).timeline.tracks.map(track => {
+    const first = track.keyframes[0], last = track.keyframes.at(-1)!;
+    const span: Span = {id: `track:${track.target.object}/${track.target.part ?? ''}/${track.property}`, type: 'authored', target: track.target.object, start: first.time, duration: last.time-first.time};
+    if (track.target.part && track.property !== 'rotation') fail(span, 'authored part tracks support rotation only; keep joint positions, pivots and scales in the rig');
+    if (track.keyframes.length < 2) fail(span, 'authored track needs at least two keyframes');
+    if (track.keyframes.some(k => Math.abs(k.time*plan.fps-Math.round(k.time*plan.fps)) > 1e-8)) fail(span, 'keyframes must align with frame boundaries');
+    return {track, span};
+  });
   type Claim = {start: number; end: number; action: string};
   const claims = new Map<string, Claim[]>();
   const key = (target: Track['target'], property: Track['property']) => JSON.stringify([target.object,target.part ?? null,property]);
@@ -72,16 +108,22 @@ export function compileMotion(manifest: unknown, inputs: Record<string, unknown>
     const o = object(target.object), p = target.part ? rigs[o.rig].parts.find(p => p.id === target.part)! : o;
     switch (property) {case 'position.x': return p.position.x; case 'position.y': return p.position.y; case 'rotation': return p.rotation; case 'scale.x': return p.scale.x; case 'scale.y': return p.scale.y; case 'opacity': return p.opacity;}
   }
-  function write(a: MotionAction, target: Track['target'], property: Track['property'], end: number, samples?: number[]) {
+  function insert(a: Span, target: Track['target'], property: Track['property'], keys: Track['keyframes']) {
     const k = key(target,property), ranges = claims.get(k) ?? [];
     if (ranges.some(r => a.start < r.end-1e-9 && a.start+a.duration > r.start+1e-9)) fail(a, `conflicting ${k} with ${ranges.find(r => a.start < r.end && a.start+a.duration > r.start)?.action}`);
     const from = value(target,property,a.start);
+    if (property === 'rotation') checkAngles(a,target,keys.map(k=>k.value),keys[0].value);
+    if (a.start > 0 && Math.abs(keys[0].value-from) > 1e-6) fail(a, `discontinuous first value for ${k}: expected ${from}, got ${keys[0].value}`);
     let track = timeline.tracks.find(t => key(t.target,t.property) === k);
     if (!track) {track = {target,property,keyframes:[{time:0,value:from,easing:'linear'}]}; timeline.tracks.push(track);}
-    const keys = samples ? samples.map((v,i) => ({time:(Math.round(a.start*plan.fps)+i)/plan.fps,value:v,easing:'linear' as const})) : [{time:a.start,value:from,easing:a.easing},{time:a.start+a.duration,value:end,easing:'linear' as const}];
     // Preserve the hold before each action, including gaps between actions.
     for (const kf of keys) {const existing = track.keyframes.find(k => Math.abs(k.time-kf.time)<1e-9); if (existing) Object.assign(existing,kf); else track.keyframes.push(kf);}
     track.keyframes.sort((a,b) => a.time-b.time); ranges.push({start:a.start,end:a.start+a.duration,action:a.id}); claims.set(k,ranges);
+  }
+  function write(a: MotionAction, target: Track['target'], property: Track['property'], end: number, samples?: number[]) {
+    const from = value(target,property,a.start);
+    const keys = samples ? samples.map((v,i) => ({time:(Math.round(a.start*plan.fps)+i)/plan.fps,value:v,easing:'linear' as const})) : [{time:a.start,value:from,easing:a.easing},{time:a.start+a.duration,value:end,easing:'linear' as const}];
+    insert(a,target,property,keys);
   }
   function states(time: number) {
     // The evaluator rejects the exclusive endpoint; extend only this private evaluation view by one frame.
@@ -104,19 +146,48 @@ export function compileMotion(manifest: unknown, inputs: Record<string, unknown>
     const v2 = {x:hand.position.x-lower.pivot.x,y:hand.position.y-lower.pivot.y};
     const l1 = Math.hypot(v1.x,v1.y), l2 = Math.hypot(v2.x,v2.y), d = Math.hypot(x,y);
     if (l1 < 1e-6 || l2 < 1e-6 || d < 1e-6 || d > l1+l2+1e-7 || d < Math.abs(l1-l2)-1e-7) fail(a,`unreachable contact (${to.x}, ${to.y}); link lengths ${l1}, ${l2}`);
-    const bend = 'bend' in a ? a.bend : 1;
-    const elbow = bend*Math.acos(Math.max(-1,Math.min(1,(d*d-l1*l1-l2*l2)/(2*l1*l2))));
-    const shoulder = Math.atan2(y,x)-Math.atan2(l2*Math.sin(elbow),l1+l2*Math.cos(elbow));
-    for (const [part,angle] of [[upper.id,degrees(shoulder-Math.atan2(v1.y,v1.x))],[lower.id,degrees(elbow+Math.atan2(v1.y,v1.x)-Math.atan2(v2.y,v2.x))]] as const) {
-      const target = {object:a.target,part}; write(a,target,'rotation',nearest(angle,value(target,'rotation',a.start)));
+    const requested = 'bend' in a && a.bend !== 'auto' ? a.bend : 1;
+    const explicit = 'bend' in a && a.bend !== 'auto';
+    const constrainedArm = ruleFor({object:a.target,part:upper.id}) || ruleFor({object:a.target,part:lower.id});
+    const bends = constrainedArm && !explicit ? [1,-1] : [requested];
+    const candidates: {angles: [string,number][]; score:number}[] = [];
+    for (const bend of bends) {
+      const elbow = bend*Math.acos(Math.max(-1,Math.min(1,(d*d-l1*l1-l2*l2)/(2*l1*l2))));
+      const shoulder = Math.atan2(y,x)-Math.atan2(l2*Math.sin(elbow),l1+l2*Math.cos(elbow));
+      const angles: [string,number][] = [[upper.id,degrees(shoulder-Math.atan2(v1.y,v1.x))],[lower.id,degrees(elbow+Math.atan2(v1.y,v1.x)-Math.atan2(v2.y,v2.x))]];
+      let score = 0, valid = true;
+      for (const pair of angles) {
+        const target = {object:a.target,part:pair[0]}, from = value(target,'rotation',a.start), rule = ruleFor(target);
+        let angle = nearest(pair[1],from);
+        if (rule) {
+          const low = Math.ceil((rule.min-pair[1]-1e-7)/360), high = Math.floor((rule.max-pair[1]+1e-7)/360);
+          if (low > high) {valid = false; break;}
+          angle = pair[1]+360*Math.max(low,Math.min(high,Math.round((from-pair[1])/360)));
+          if (rule.stability !== undefined && Math.abs(angle-from)>rule.stability+1e-7) {valid=false;break;}
+        }
+        score += (angle-(rule?.preferred ?? from))**2; pair[1]=angle;
+      }
+      if (valid) candidates.push({angles,score});
     }
+    candidates.sort((a,b)=>a.score-b.score);
+    if (!candidates.length) fail(a,'no reachable pose satisfies joint limits/stability and requested bend');
+    for (const [part,angle] of candidates[0].angles) write(a,{object:a.target,part},'rotation',angle);
   }
-  type Attachment = {action: MotionAction; object: string; start: number; end: number; initial: Matrix; contactHand: Matrix};
+  type Attachment = {action: MotionAction; object: string; start: number; end: number; initial: Matrix};
   const attachments: Attachment[] = [], held = new Map<string, Attachment>();
-  for (const a of actions) {
+  const events = [
+    ...actions.map(action => ({span: action, action, authored: null})),
+    ...authored.map(item => ({span: item.span, action: null, authored: item.track})),
+  ].sort((a,b) => a.span.start-b.span.start || (a.span.id < b.span.id ? -1 : a.span.id > b.span.id ? 1 : 0));
+  for (const event of events) {
+    if (event.authored) {insert(event.span,event.authored.target,event.authored.property,event.authored.keyframes); continue;}
+    const a = event.action!;
     try {
       const map = plan.rigs[a.target], target = {object:a.target};
-      if (a.type === 'walk' || a.type === 'sit') {
+      if (a.type === 'pose') {
+        const pose = plan.poses![a.pose];
+        for (const [role,angle] of Object.entries({...pose.preferred,...pose.joints})) write(a,{...target,part:map[role as keyof SemanticRig]!},'rotation',angle!);
+      } else if (a.type === 'walk' || a.type === 'sit') {
         write(a,target,'position.x',a.to.x); write(a,target,'position.y',a.to.y);
         const poses: [keyof SemanticRig,number][] = a.type === 'walk' ? [['leftThigh',1],['rightThigh',-1],['leftLowerLeg',-0.5],['rightLowerLeg',0.5],['upperArm',-1],['otherUpperArm',1]] : [['torso',0.12],['leftThigh',-1],['rightThigh',-1],['leftLowerLeg',1],['rightLowerLeg',1]];
         for (const [role,sign] of poses) {
@@ -131,7 +202,7 @@ export function compileMotion(manifest: unknown, inputs: Record<string, unknown>
         const initial = states(a.start).find(o => o.id === a.object)!.matrix;
         reach(a,point(initial,a.contact));
         const start = a.start+a.duration;
-        const attach = {action:a,object:a.object,start,end:plan.duration,initial,contactHand:handMatrix(a,start)};
+        const attach = {action:a,object:a.object,start,end:plan.duration,initial};
         attachments.push(attach); held.set(a.object,attach);
       } else {
         const attached = held.get(a.object);
@@ -139,6 +210,24 @@ export function compileMotion(manifest: unknown, inputs: Record<string, unknown>
         reach(a,a.to); attached!.end = a.start+a.duration; held.delete(a.object);
       }
     } catch (error) {fail(a,(error as Error).message);}
+  }
+  for (const [index,secondary] of (plan.secondary ?? []).entries()) {
+    const a: Span = {id:`secondary:${index}`,type:'secondary',target:secondary.target,start:secondary.start,duration:secondary.duration};
+    object(a.target);
+    const part = plan.rigs[a.target]?.[secondary.joint];
+    if (!part) fail(a,`missing semantic part ${secondary.joint}`);
+    const end = a.start+a.duration, n = Math.round(a.duration*plan.fps);
+    if (end > plan.duration || ![a.start,a.duration].every(t=>Math.abs(t*plan.fps-Math.round(t*plan.fps))<1e-8) || n<secondary.cycles*4) fail(a,'invalid secondary timing or cycle sampling');
+    if (secondary.intensity === 0 || secondary.amplitude === 0) continue;
+    const rig = rigs[object(a.target).rig];
+    const descendant = (id:string) => {let p=rig.parts.find(p=>p.id===id);while(p){if(p.id===part)return true;p=p.parent?rig.parts.find(q=>q.id===p!.parent):undefined;}return false;};
+    for (const track of timeline.tracks.filter(t=>t.target.object===a.target && t.target.part && descendant(t.target.part))) {
+      if ((claims.get(key(track.target,track.property)) ?? []).some(r=>a.start<r.end-1e-9&&end>r.start+1e-9)) fail(a,'secondary motion would disturb a primary joint/descendant interval');
+    }
+    if (attachments.some(h=>h.action.target===a.target&&a.start<h.end&&end>h.start) && descendant(plan.rigs[a.target].hand!)) fail(a,'secondary motion on a held-object ancestor is unsupported');
+    const target = {object:a.target,part:part!}, from = value(target,'rotation',a.start);
+    const keys = Array.from({length:n+1},(_,i)=>({time:(Math.round(a.start*plan.fps)+i)/plan.fps,value:from+(i===0||i===n?0:secondary.amplitude*secondary.intensity*Math.sin(i/n*Math.PI)**2*Math.sin(i/n*secondary.cycles*2*Math.PI)),easing:'linear' as const}));
+    insert(a,target,'rotation',keys);
   }
   // Ancestor/object movement during a reach invalidates its solved endpoint: reject instead of silently missing contact.
   for (const a of actions.filter(a => ['reach','pickUp','putDown'].includes(a.type))) {
@@ -151,7 +240,9 @@ export function compileMotion(manifest: unknown, inputs: Record<string, unknown>
     }
   }
   for (const attachment of attachments) {
-    const {action:a,object:id,start,end,initial,contactHand} = attachment;
+    const {action:a,object:id,start,end,initial} = attachment;
+    // Capture after all authored joint/wrist tracks have been composed, including motion during pickup.
+    const contactHand = handMatrix(a,start);
     const target = {object:id};
     if (timeline.tracks.some(t => t.target.object === id)) fail(a,`attached object ${id} has explicit motion tracks`);
     const offset = multiply(inverse(contactHand),initial);

@@ -1,0 +1,285 @@
+{
+  "version": "1.0",
+  "fps": 24,
+  "duration": 15,
+  "rigs": {
+    "man": {
+      "torso": "torso",
+      "upperArm": "arm-near-upper",
+      "forearm": "arm-near-lower",
+      "hand": "hand",
+      "otherUpperArm": "arm-far-upper",
+      "leftThigh": "thigh-near",
+      "rightThigh": "thigh-far",
+      "leftLowerLeg": "shin-near",
+      "rightLowerLeg": "shin-far"
+    }
+  },
+  "actions": [
+    {
+      "type": "walk",
+      "id": "enter-gym",
+      "target": "man",
+      "start": 0,
+      "duration": 2.5,
+      "dependencies": [],
+      "to": {
+        "x": 340,
+        "y": 157
+      },
+      "cycles": 2,
+      "amplitude": 16.5
+    },
+    {
+      "type": "reach",
+      "id": "reach-dumbbell",
+      "target": "man",
+      "start": 2.75,
+      "duration": 0.75,
+      "dependencies": [
+        "enter-gym"
+      ],
+      "to": {
+        "x": 550,
+        "y": 360
+      },
+      "bend": -1
+    },
+    {
+      "type": "pickUp",
+      "id": "grab-dumbbell",
+      "target": "man",
+      "start": 3.5,
+      "duration": 0.5,
+      "dependencies": [
+        "reach-dumbbell"
+      ],
+      "object": "dumbbell",
+      "contact": {
+        "x": 30,
+        "y": 22
+      },
+      "bend": -1
+    },
+    {
+      "type": "putDown",
+      "id": "rack-dumbbell",
+      "target": "man",
+      "start": 7.75,
+      "duration": 1,
+      "dependencies": [
+        "grab-dumbbell"
+      ],
+      "object": "dumbbell",
+      "to": {
+        "x": 550,
+        "y": 360
+      },
+      "bend": -1
+    },
+    {
+      "type": "reach",
+      "id": "reach-bottle",
+      "target": "man",
+      "start": 9,
+      "duration": 0.75,
+      "dependencies": [
+        "rack-dumbbell"
+      ],
+      "to": {
+        "x": 545,
+        "y": 286
+      },
+      "bend": -1
+    },
+    {
+      "type": "pickUp",
+      "id": "grab-bottle",
+      "target": "man",
+      "start": 9.75,
+      "duration": 0.5,
+      "dependencies": [
+        "reach-bottle"
+      ],
+      "object": "bottle",
+      "contact": {
+        "x": 15,
+        "y": 32
+      },
+      "bend": -1
+    },
+    {
+      "type": "reach",
+      "id": "drink",
+      "target": "man",
+      "start": 10.25,
+      "duration": 1,
+      "dependencies": [
+        "grab-bottle"
+      ],
+      "to": {
+        "x": 526.5766180370263,
+        "y": 280.6333113287396
+      },
+      "bend": -1
+    },
+    {
+      "type": "putDown",
+      "id": "rack-bottle",
+      "target": "man",
+      "start": 11.75,
+      "duration": 1,
+      "dependencies": [
+        "drink"
+      ],
+      "object": "bottle",
+      "to": {
+        "x": 545,
+        "y": 286
+      },
+      "bend": -1
+    },
+    {
+      "type": "reach",
+      "id": "victory-pump",
+      "target": "man",
+      "start": 13,
+      "duration": 0.75,
+      "dependencies": [
+        "rack-bottle"
+      ],
+      "to": {
+        "x": 530,
+        "y": 252
+      },
+      "bend": -1
+    }
+  ],
+  "tracks": [
+    {
+      "target": {
+        "object": "shadow"
+      },
+      "property": "position.x",
+      "keyframes": [
+        {
+          "time": 0,
+          "value": -30,
+          "easing": "easeInOut"
+        },
+        {
+          "time": 2.5,
+          "value": 340,
+          "easing": "linear"
+        }
+      ]
+    },
+    {
+      "target": {
+        "object": "man",
+        "part": "arm-near-upper"
+      },
+      "property": "rotation",
+      "keyframes": [
+        {
+          "time": 4,
+          "value": -31.87644842551714,
+          "easing": "easeInOut"
+        },
+        {
+          "time": 4.5,
+          "value": -12,
+          "easing": "easeInOut"
+        },
+        {
+          "time": 7.75,
+          "value": -12,
+          "easing": "easeInOut"
+        }
+      ]
+    },
+    {
+      "target": {
+        "object": "man",
+        "part": "arm-near-lower"
+      },
+      "property": "rotation",
+      "keyframes": [
+        {
+          "time": 4,
+          "value": -58.486619110419156,
+          "easing": "easeInOut"
+        },
+        {
+          "time": 4.5,
+          "value": -10,
+          "easing": "easeInOut"
+        },
+        {
+          "time": 5,
+          "value": -125,
+          "easing": "easeInOut"
+        },
+        {
+          "time": 5.5,
+          "value": -10,
+          "easing": "easeInOut"
+        },
+        {
+          "time": 6,
+          "value": -125,
+          "easing": "easeInOut"
+        },
+        {
+          "time": 6.5,
+          "value": -10,
+          "easing": "easeInOut"
+        },
+        {
+          "time": 7,
+          "value": -125,
+          "easing": "easeInOut"
+        },
+        {
+          "time": 7.5,
+          "value": -10,
+          "easing": "easeInOut"
+        },
+        {
+          "time": 7.75,
+          "value": -10,
+          "easing": "easeInOut"
+        }
+      ]
+    },
+    {
+      "target": {
+        "object": "man",
+        "part": "hand"
+      },
+      "property": "rotation",
+      "keyframes": [
+        {
+          "time": 10.25,
+          "value": 0,
+          "easing": "easeInOut"
+        },
+        {
+          "time": 11.25,
+          "value": -44.685807776214006,
+          "easing": "easeInOut"
+        },
+        {
+          "time": 11.75,
+          "value": -44.685807776214006,
+          "easing": "easeInOut"
+        },
+        {
+          "time": 12.75,
+          "value": 0,
+          "easing": "easeInOut"
+        }
+      ]
+    }
+  ]
+}

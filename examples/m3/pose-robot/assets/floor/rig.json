@@ -1,0 +1,8 @@
+{
+  "version": "1.0",
+  "id": "floor",
+  "canvas": { "width": 1280, "height": 720 },
+  "parts": [
+    { "id": "floor", "asset": "floor.svg", "parent": null, "position": { "x": 0, "y": 0 }, "pivot": { "x": 0, "y": 0 }, "zIndex": 0 }
+  ]
+}

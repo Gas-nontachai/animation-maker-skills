@@ -4,7 +4,7 @@ Turn a request such as “สร้างแอนิเมชันตัวล
 
 ## Release status
 
-`@gasnonthachai/animation-maker@1.1.1` is published and verified, with Git tag `v1.1.1` at its source commit. It is the baseline for future automatic releases. All three Skills accept compatible stable runtimes in `^1.1.1` (`>=1.1.1 <2.0.0`) instead of an exact pin. Package publication or a tarball test alone is not evidence that the public one-prompt workflow has shipped.
+`@gasnonthachai/animation-maker@1.4.0` is published from `2eb32e7` (verified against registry gitHead), including M2/M3. The source manifest remains 1.1.2 because release versioning is handled by the existing pipeline. M3.1 Phase 1/2 additions on the feature branch require explicit capability checks and are separate from published M3. All three Skills accept compatible stable runtimes in `^1.1.1` (`>=1.1.1 <2.0.0`) instead of an exact pin. Package publication or a tarball test alone is not evidence that the public one-prompt workflow has shipped.
 
 ## First-use workflow after release
 
@@ -87,11 +87,11 @@ npm run test:release
 
 Future publication uses the protected OIDC release workflow after security checks, artifact verification and explicit maintainer approval; local test scripts do not publish. The project's MIT license covers its code and artwork; Remotion has separate [license terms](https://www.remotion.dev/docs/license).
 
-## Multi-object scenes (M2, unreleased)
+## Multi-object scenes (M2)
 
 See [scene contract](docs/scene-contract.md) and editable examples under `examples/m2`. Existing M1 projects need no migration. Owner E2E approval is pending.
 
-## Motion intelligence (M3, unreleased)
+## Motion intelligence (M3)
 
 M3 adds deterministic walk, sit, reach, pickUp and putDown presets, semantic rig mapping, explicit action/dependency validation and coordinated object attachment compiled into editable M2 timelines. The existing renderer, SVG security and M1/M2 contracts are unchanged. No hosted inference, API key, physics engine or runtime constraints are introduced. The agent interprets prompts and authors plans; the compiler only handles validated supported operations.
 
@@ -105,3 +105,11 @@ node bin/animation-maker.mjs inspect --input output/coffee.mp4
 ```
 
 The plan command creates an unused output file; review it before explicitly replacing timeline.json. No npm publication is implied by the package version. Motion is stylized and capability-limited; hand-to-mouth gestures use reach/hold rather than a drink simulation. Owner M1/M2 regression, prompt-to-video E2E and visual acceptance remain pending. No milestone acceptance or release is performed by implementation checks.
+
+### M3.1 motion quality (unreleased)
+
+Curls and wrist tilts can use optional authored rotation `tracks` in motion.json; the planner composes them before baking held-object motion. Reach remains an endpoint operation. Existing rigs, transparent hand anchors, plans and rendering contracts remain supported; no Curl preset or dependency is added. See the [Gym investigation, comparison artifacts and owner procedure](docs/m3-1-motion-quality.md), plus editable `examples/m3/gym-reference` and `examples/m3/gym-corrected`. Regression, Manual E2E and Visual Acceptance remain owner responsibilities.
+
+### M3.1 Phase 2 pose planning (candidate)
+
+Optional semantic poses, joint limits/preferences/stability and explicit low-intensity secondary motion compile into existing M2 keyframes. The agent selects rig-appropriate poses from action intent; users need not specify joint rotations. See the [Phase 2 contract and owner comparison procedure](docs/m3-1-phase2.md), with separate Gym, alternate robot and walk/sit/reach examples. Final owner regression, E2E and visual review remain pending.

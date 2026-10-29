@@ -1,0 +1,19 @@
+{
+  "version": "1.0",
+  "id": "man",
+  "canvas": { "width": 200, "height": 400 },
+  "parts": [
+    { "id": "torso", "asset": "torso.svg", "parent": null, "position": { "x": 100, "y": 215 }, "pivot": { "x": 100, "y": 215 }, "zIndex": 2 },
+    { "id": "head", "asset": "head.svg", "parent": "torso", "position": { "x": 100, "y": 105 }, "pivot": { "x": 100, "y": 105 }, "zIndex": 4 },
+    { "id": "arm-far-upper", "asset": "arm-far-upper.svg", "parent": "torso", "position": { "x": 100, "y": 125 }, "pivot": { "x": 100, "y": 125 }, "zIndex": 0 },
+    { "id": "arm-far-lower", "asset": "arm-far-lower.svg", "parent": "arm-far-upper", "position": { "x": 100, "y": 162 }, "pivot": { "x": 100, "y": 162 }, "rotation": -12, "zIndex": 0 },
+    { "id": "thigh-far", "asset": "thigh-far.svg", "parent": "torso", "position": { "x": 100, "y": 215 }, "pivot": { "x": 100, "y": 215 }, "zIndex": 1 },
+    { "id": "shin-far", "asset": "shin-far.svg", "parent": "thigh-far", "position": { "x": 100, "y": 272 }, "pivot": { "x": 100, "y": 272 }, "zIndex": 1 },
+    { "id": "thigh-near", "asset": "thigh-near.svg", "parent": "torso", "position": { "x": 100, "y": 215 }, "pivot": { "x": 100, "y": 215 }, "zIndex": 3 },
+    { "id": "shin-near", "asset": "shin-near.svg", "parent": "thigh-near", "position": { "x": 100, "y": 272 }, "pivot": { "x": 100, "y": 272 }, "zIndex": 3 },
+    { "id": "arm-near-upper", "asset": "arm-near-upper.svg", "parent": "torso", "position": { "x": 100, "y": 125 }, "pivot": { "x": 100, "y": 125 }, "zIndex": 5 },
+    { "id": "arm-near-lower", "asset": "arm-near-lower.svg", "parent": "arm-near-upper", "position": { "x": 100, "y": 162 }, "pivot": { "x": 100, "y": 162 }, "rotation": -12, "zIndex": 5 },
+    { "id": "hand", "asset": "hand-anchor.svg", "parent": "arm-near-lower", "position": { "x": 100, "y": 204 }, "pivot": { "x": 100, "y": 204 }, "zIndex": 5 },
+    { "id": "headband", "asset": "headband.svg", "parent": "head", "position": { "x": 100, "y": 105 }, "pivot": { "x": 100, "y": 105 }, "zIndex": 6 }
+  ]
+}

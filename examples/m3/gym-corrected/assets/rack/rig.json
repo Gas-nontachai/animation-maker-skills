@@ -1,0 +1,8 @@
+{
+  "version": "1.0",
+  "id": "rack",
+  "canvas": { "width": 210, "height": 300 },
+  "parts": [
+    { "id": "rack", "asset": "rack.svg", "parent": null, "position": { "x": 0, "y": 0 }, "pivot": { "x": 0, "y": 0 }, "zIndex": 0 }
+  ]
+}
