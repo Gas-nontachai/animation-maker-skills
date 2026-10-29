@@ -1,0 +1,24 @@
+{
+  "version": "1.0",
+  "id": "chair",
+  "canvas": {
+    "width": 240,
+    "height": 240
+  },
+  "parts": [
+    {
+      "id": "chair",
+      "parent": null,
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "pivot": {
+        "x": 0,
+        "y": 0
+      },
+      "asset": "chair.svg",
+      "zIndex": 0
+    }
+  ]
+}

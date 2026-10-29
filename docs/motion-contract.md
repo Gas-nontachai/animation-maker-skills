@@ -1,0 +1,35 @@
+# M3 motion planning contract (unreleased)
+
+M3 adds `motion.json` version `1.0` and `compileMotion(scene, rigsByPath, plan)` to the pure runtime exports. Rig v1.0, Timeline v1.0 and M2 scene contracts are unchanged. The compiler emits an ordinary M2 timeline; render never reads motion.json or runs a constraint solver. Existing files require no migration. No new dependencies or external inference service are used.
+
+## Authoring and compilation
+
+The agent interprets language and authors explicit assets, mappings, timing and action parameters. The compiler validates that plan; it does not parse natural language. Preserve motion.json alongside SVG, rig, scene and generated timeline files. `animation-maker plan --project <scene-project> --output <new-file>` loads and validates the existing M2 project (including SVG safety and path confinement), reads confined motion.json and creates a new timeline file exclusively. It refuses to overwrite any output. Review that output, then replace timeline.json explicitly. Recompilation is deterministic. Existing doctor/create/validate/render/inspect commands retain their behavior.
+
+Top-level strict fields: version `1.0`, fps 1–120, positive duration producing an integer frame count, rigs (object ID → semantic mapping), actions (nonempty array). Units are seconds, degrees and M2 world/SVG coordinates. Action boundaries must fall on frame boundaries. Unknown fields, action types, nonfinite values and unsupported easing are rejected.
+
+Each action has a unique id, type, target object ID, start ≥ 0, duration > 0, optional dependencies (action IDs, default empty), and optional easing (linear/easeIn/easeOut/easeInOut, default easeInOut). Dependencies must exist, be acyclic and finish before the dependent action starts. Times are explicit; the agent assigns durations and idle gaps rather than the compiler inventing timing. Actions sort by start then ID. Same-property overlapping intervals are errors; adjacent intervals share their boundary value. Values hold across gaps and after actions. Multiple independent targets may overlap.
+
+## Semantic mapping
+
+Mappings live in the plan, never inside or in place of Rig v1.0. Values are existing part IDs, each used at most once per mapping. Semantic roles are torso, upperArm, forearm, hand, otherUpperArm, leftThigh, rightThigh, leftLowerLeg, rightLowerLeg. Only roles required by requested actions need mapping. Lower legs must be direct children of their thighs for walk/sit. Parent-child pivots and geometry must be authored to join at the intended joints. The planner cannot infer silhouette contact or repair disconnected artwork.
+
+Reach/pickUp/putDown require a direct upperArm → forearm → hand chain with unit local scales on the two arm links and nonzero link lengths. Link vectors derive from child positions minus parent pivots. The contact anchor is the hand's pivot, not its geometry origin. Ancestors and object placement can be rotated/scaled, provided their matrices are invertible. A specialized planar two-link calculation solves endpoint angles; this is not a generalized IK engine. Moving arm ancestors during the reach interval is rejected; finish walking/sitting before reaching. Nonuniform transforms that produce object shear during attachment are rejected because M2 cannot express shear.
+
+## Presets
+
+- **walk**: `to: {x,y}` is the final character origin in world space; amplitude 0–80 degrees (default 25), cycles integer 1–100 (default 2). Requires both thighs/lower legs and upperArm/otherUpperArm. Legs and arms swing oppositely and return to their initial angles at the endpoint; origin translates with the chosen easing. At least four frames per cycle are required. The stylized cycle is sinusoidal with linear frame interpolation; easing applies to translation.
+- **sit**: `to: {x,y}` is the final character origin; amplitude 0–120 (default 80). Requires torso and both thighs/lower legs. Thighs bend by negative amplitude, lower legs by positive amplitude and torso leans by 0.12 × amplitude, relative to the initial pose. Agent-authored chair placement and rig proportions determine visual seating.
+- **reach**: `to: {x,y}` is the desired world-space hand pivot. Optional bend +1 or -1 (default +1) chooses the elbow branch. The solver selects equivalent angles nearest the current pose and interpolates local rotations. Unreachable endpoints fail. Intermediate hand travel is an arc, not a straight Cartesian path.
+- **pickUp**: `object` identifies an independent scene object; `contact: {x,y}` is a point in that object's rig coordinate system. The arm reaches its current world contact position during the action; attachment starts exactly at the end boundary. Optional bend as above. The object remains stationary before contact. A hand can hold one object at a time; an object can have one holder. Repeated pickup of the same object in one plan is explicitly unsupported in this version.
+- **putDown**: `object` must be held by this character. `to: {x,y}` is the desired world-space contact/hand-pivot destination, not necessarily the object's origin. Optional bend as above. It moves the arm and releases at the end boundary. To place an object's origin at a precise point, account for its contact offset, or author contact at its origin.
+
+## Attachment compilation and continuity
+
+At pickup contact, capture full hand world matrix H₀ and object world matrix O₀. Each attached sample uses O(t) = H(t) × inverse(H₀) × O₀. H includes scene placement and every rig ancestor; local positions are never simply copied. Decompose each object sample into M2 translation, rotation and scale, rejecting singular/sheared decompositions and discontinuities at contact. Angle unwrapping avoids 360° jumps. Sample every frame including the exact release endpoint; object values hold after release. Frame-sampled linear tracks reproduce coordination at rendered frame times, including eased arm movement, and remain editable. Subframe interpolation is approximate. Sampling cost grows with plan duration and FPS.
+
+Attached objects cannot also have explicitly planned motion tracks. No implicit targeting of desk/chair/background occurs. Renderer and timeline validators are reused without weakening SVG restrictions. Errors identify invalid parameters/references or the failing action and target.
+
+## Limits
+
+No physics, collisions, foot planting, balance, automatic chair fitting, object surface inference, arbitrary rig topology or generalized IK. Zero-scale arm ancestors, sheared attachments and equivalent reflected-scale decompositions that change contact boundary values fail explicitly. Walk/sit are stylized. Geometry authoring remains responsible for joint overlap. No built-in drink action: an agent can author a reachable hand-to-mouth reach and hold, explicitly describing it as a sip pose; unsupported liquid/body simulation must not be claimed. The example is geometric developer evidence, not owner visual approval.

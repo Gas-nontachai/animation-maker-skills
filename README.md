@@ -90,3 +90,18 @@ Future publication uses the protected OIDC release workflow after security check
 ## Multi-object scenes (M2, unreleased)
 
 See [scene contract](docs/scene-contract.md) and editable examples under `examples/m2`. Existing M1 projects need no migration. Owner E2E approval is pending.
+
+## Motion intelligence (M3, unreleased)
+
+M3 adds deterministic walk, sit, reach, pickUp and putDown presets, semantic rig mapping, explicit action/dependency validation and coordinated object attachment compiled into editable M2 timelines. The existing renderer, SVG security and M1/M2 contracts are unchanged. No hosted inference, API key, physics engine or runtime constraints are introduced. The agent interprets prompts and authors plans; the compiler only handles validated supported operations.
+
+See the [motion contract](docs/motion-contract.md), [owner handoff and release discrepancy](docs/m3-owner-e2e.md), and editable `examples/m3/coffee` project. `compileMotion` is exported by the runtime. In this authorized checkout:
+
+```sh
+node bin/animation-maker.mjs plan --project examples/m3/coffee --output output/coffee-candidate.json
+node bin/animation-maker.mjs validate --project examples/m3/coffee
+node bin/animation-maker.mjs render --project examples/m3/coffee --output output/coffee.mp4
+node bin/animation-maker.mjs inspect --input output/coffee.mp4
+```
+
+The plan command creates an unused output file; review it before explicitly replacing timeline.json. No npm publication is implied by the package version. Motion is stylized and capability-limited; hand-to-mouth gestures use reach/hold rather than a drink simulation. Owner M1/M2 regression, prompt-to-video E2E and visual acceptance remain pending. No milestone acceptance or release is performed by implementation checks.

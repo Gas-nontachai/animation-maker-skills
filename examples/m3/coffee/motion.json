@@ -1,0 +1,105 @@
+{
+  "version": "1.0",
+  "fps": 24,
+  "duration": 8,
+  "rigs": {
+    "person": {
+      "torso": "body",
+      "upperArm": "upper",
+      "forearm": "fore",
+      "hand": "palm",
+      "otherUpperArm": "other",
+      "leftThigh": "lt",
+      "rightThigh": "rt",
+      "leftLowerLeg": "ll",
+      "rightLowerLeg": "rl"
+    }
+  },
+  "actions": [
+    {
+      "type": "walk",
+      "id": "approach",
+      "target": "person",
+      "start": 0,
+      "duration": 2,
+      "dependencies": [],
+      "to": {
+        "x": 500,
+        "y": 350
+      },
+      "cycles": 3
+    },
+    {
+      "type": "sit",
+      "id": "sit",
+      "target": "person",
+      "start": 2.25,
+      "duration": 1,
+      "dependencies": [
+        "approach"
+      ],
+      "to": {
+        "x": 500,
+        "y": 380
+      }
+    },
+    {
+      "type": "reach",
+      "id": "reach",
+      "target": "person",
+      "start": 3.25,
+      "duration": 0.75,
+      "dependencies": [
+        "sit"
+      ],
+      "to": {
+        "x": 600,
+        "y": 360
+      }
+    },
+    {
+      "type": "pickUp",
+      "id": "contact",
+      "target": "person",
+      "start": 4,
+      "duration": 0.5,
+      "dependencies": [
+        "reach"
+      ],
+      "object": "cup",
+      "contact": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "reach",
+      "id": "sip-pose",
+      "target": "person",
+      "start": 4.5,
+      "duration": 1,
+      "dependencies": [
+        "contact"
+      ],
+      "to": {
+        "x": 530,
+        "y": 300
+      }
+    },
+    {
+      "type": "putDown",
+      "id": "replace",
+      "target": "person",
+      "start": 6,
+      "duration": 1,
+      "dependencies": [
+        "sip-pose"
+      ],
+      "object": "cup",
+      "to": {
+        "x": 600,
+        "y": 360
+      }
+    }
+  ]
+}
