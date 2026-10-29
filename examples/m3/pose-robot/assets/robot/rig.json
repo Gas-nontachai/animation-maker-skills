@@ -1,0 +1,85 @@
+{
+  "version": "1.0",
+  "id": "robot",
+  "canvas": {
+    "width": 200,
+    "height": 260
+  },
+  "parts": [
+    {
+      "id": "core",
+      "parent": null,
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "pivot": {
+        "x": 0,
+        "y": 0
+      },
+      "asset": "core.svg",
+      "zIndex": 0,
+      "rotation": 0
+    },
+    {
+      "id": "sensor",
+      "parent": "core",
+      "position": {
+        "x": 0,
+        "y": -80
+      },
+      "pivot": {
+        "x": 0,
+        "y": 0
+      },
+      "asset": "sensor.svg",
+      "zIndex": 4,
+      "rotation": 0
+    },
+    {
+      "id": "servo",
+      "parent": "core",
+      "position": {
+        "x": 20,
+        "y": -40
+      },
+      "pivot": {
+        "x": 0,
+        "y": 0
+      },
+      "asset": "servo.svg",
+      "zIndex": 2,
+      "rotation": 65
+    },
+    {
+      "id": "lever",
+      "parent": "servo",
+      "position": {
+        "x": 55,
+        "y": 0
+      },
+      "pivot": {
+        "x": 0,
+        "y": 0
+      },
+      "asset": "lever.svg",
+      "zIndex": 3,
+      "rotation": -20
+    },
+    {
+      "id": "socket",
+      "parent": "lever",
+      "position": {
+        "x": 75,
+        "y": 0
+      },
+      "pivot": {
+        "x": 3,
+        "y": 2
+      },
+      "asset": "socket.svg",
+      "zIndex": 4,
+      "rotation": 0
+    }
+  ]
+}

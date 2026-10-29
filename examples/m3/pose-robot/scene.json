@@ -1,0 +1,55 @@
+{
+  "version": "1.0",
+  "canvas": {
+    "width": 1280,
+    "height": 720
+  },
+  "background": "#eaf5fa",
+  "objects": [
+    {
+      "id": "floor",
+      "rig": "assets/floor/rig.json",
+      "position": {
+        "x": 0,
+        "y": 600
+      }
+    },
+    {
+      "id": "station",
+      "rig": "assets/rack/rig.json",
+      "position": {
+        "x": 510,
+        "y": 300
+      }
+    },
+    {
+      "id": "robot",
+      "rig": "assets/robot/rig.json",
+      "position": {
+        "x": 450,
+        "y": 380
+      },
+      "rotation": -8,
+      "scale": {
+        "x": 1.1,
+        "y": 1.1
+      }
+    },
+    {
+      "id": "weight",
+      "rig": "assets/dumbbell/rig.json",
+      "position": {
+        "x": 530,
+        "y": 368
+      }
+    },
+    {
+      "id": "water",
+      "rig": "assets/bottle/rig.json",
+      "position": {
+        "x": 555,
+        "y": 288
+      }
+    }
+  ]
+}

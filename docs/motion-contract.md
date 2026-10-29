@@ -1,4 +1,6 @@
-# M3 motion planning contract (unreleased)
+# M3 motion planning contract
+
+Base M3 is published in 1.4.0 from 2eb32e7. Optional M3.1 authored-track and Phase 2 pose/constraint extensions are capability-gated candidates on the feature branch, not implied by that published version.
 
 M3 adds `motion.json` version `1.0` and `compileMotion(scene, rigsByPath, plan)` to the pure runtime exports. Rig v1.0, Timeline v1.0 and M2 scene contracts are unchanged. The compiler emits an ordinary M2 timeline; render never reads motion.json or runs a constraint solver. Existing files require no migration. No new dependencies or external inference service are used.
 
@@ -20,7 +22,7 @@ Reach/pickUp/putDown require a direct upperArm → forearm → hand chain with u
 
 - **walk**: `to: {x,y}` is the final character origin in world space; amplitude 0–80 degrees (default 25), cycles integer 1–100 (default 2). Requires both thighs/lower legs and upperArm/otherUpperArm. Legs and arms swing oppositely and return to their initial angles at the endpoint; origin translates with the chosen easing. At least four frames per cycle are required. The stylized cycle is sinusoidal with linear frame interpolation; easing applies to translation.
 - **sit**: `to: {x,y}` is the final character origin; amplitude 0–120 (default 80). Requires torso and both thighs/lower legs. Thighs bend by negative amplitude, lower legs by positive amplitude and torso leans by 0.12 × amplitude, relative to the initial pose. Agent-authored chair placement and rig proportions determine visual seating.
-- **reach**: `to: {x,y}` is the desired world-space hand pivot. Optional bend +1 or -1 (default +1) chooses the elbow branch. The solver selects equivalent angles nearest the current pose and interpolates local rotations. Unreachable endpoints fail. Intermediate hand travel is an arc, not a straight Cartesian path.
+- **reach**: `to: {x,y}` is the desired world-space hand pivot. Optional bend +1 or -1 explicitly chooses the elbow branch. In Phase 2, omitted/auto retains effective +1 without arm constraints and enables constrained selection when arm rules are present. The solver selects equivalent angles nearest the current pose and interpolates local rotations. Unreachable endpoints fail. Intermediate hand travel is an arc, not a straight Cartesian path.
 - **pickUp**: `object` identifies an independent scene object; `contact: {x,y}` is a point in that object's rig coordinate system. The arm reaches its current world contact position during the action; attachment starts exactly at the end boundary. Optional bend as above. The object remains stationary before contact. A hand can hold one object at a time; an object can have one holder. Repeated pickup of the same object in one plan is explicitly unsupported in this version.
 - **putDown**: `object` must be held by this character. `to: {x,y}` is the desired world-space contact/hand-pivot destination, not necessarily the object's origin. Optional bend as above. It moves the arm and releases at the end boundary. To place an object's origin at a precise point, account for its contact offset, or author contact at its origin.
 
@@ -33,3 +35,19 @@ Attached objects cannot also have explicitly planned motion tracks. No implicit 
 ## Limits
 
 No physics, collisions, foot planting, balance, automatic chair fitting, object surface inference, arbitrary rig topology or generalized IK. Zero-scale arm ancestors, sheared attachments and equivalent reflected-scale decompositions that change contact boundary values fail explicitly. Walk/sit are stylized. Geometry authoring remains responsible for joint overlap. No built-in drink action: an agent can author a reachable hand-to-mouth reach and hold, explicitly describing it as a sip pose; unsupported liquid/body simulation must not be claimed. The example is geometric developer evidence, not owner visual approval.
+
+## M3.1 authored tracks (additive)
+
+Motion plan version 1.0 now optionally accepts `tracks` (default empty), using the existing M2 track/keyframe structure. Legacy plans and generated M2 values retain their interpretation. No new Curl action/preset, runtime constraint or evaluation engine is added. Planners predating this optional field reject it; do not silently assume old installed builds support it. The `plan` command and compileMotion signature are unchanged.
+
+Authored **part tracks support rotation only**; keep joint positions/pivots/scales in the rig so the limited Reach solver's link geometry remains valid. Scene-object tracks use existing M2 properties, for explicitly targeted independent objects (e.g. a following shadow). Attached props still cannot have explicit authored motion tracks. Existing scene/timeline validation covers property/easing/numeric values, references and duplicate target/property tracks. Additional planner checks require at least two keys on frame boundaries.
+
+Each authored track owns its complete first-to-last keyframe interval, including holds. It is inserted in time order alongside actions and checked against the same target/property interval claims. A first value after time zero must equal the already evaluated pose within 1e-6, otherwise compilation fails with a discontinuity diagnostic. At time zero an explicit initial pose is permitted. Before/after the authored interval values hold, while later nonoverlapping actions can take over from its last value. Easing is preserved exactly. One authored track per target/property is allowed; if several snippets share a property, combine them and sequence generated actions outside its reserved interval. Action dependencies do not schedule track snippets: keyframe times are explicit.
+
+For elbow-dominant curls: first settle from the pickup pose, hold upperArm.rotation near rest, then alternate forearm.rotation with existing easeInOut keys. Reach remains appropriate for initial contact and arm transport, not for constraining a curl's shoulder. Wrist tilt uses the mapped hand's local rotation; a transparent hand anchor works identically. Grip offset capture occurs after all joint/wrist tracks are composed, at the actual pickup boundary; then the existing world-matrix attachment calculation samples the entire held interval. Recompile after editing source tracks; do not patch the character alone in the compiled timeline.
+
+For drinking, distinguish object contact from its opening. Target the opening at the evaluated mouth position through arm transport plus wrist tilt and a hold. The Gym comparison demonstrates a stylized open-bottle sip, not liquid/swallowing simulation. Visible palm/thumb authoring is optional; a correct transparent anchor alone cannot prove a convincing visible grip. Read [M3.1 investigation and owner procedure](m3-1-motion-quality.md) for measurements, artifacts and limits.
+
+## Phase 2 semantic poses and constraints (candidate)
+
+See [Phase 2 contract](m3-1-phase2.md) for optional `constraints`, `poses`, `secondary` and the `pose` action. These reuse Rig v1.0, semantic mapping, interval claims, existing easing/interpolation and attachment compilation. Legacy inputs with none of these fields retain their compiled values; no rendering schema changes. The optional `head` semantic role supports explicitly authored supporting motion without requiring head geometry on legacy rigs.

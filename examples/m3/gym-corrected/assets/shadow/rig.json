@@ -1,0 +1,8 @@
+{
+  "version": "1.0",
+  "id": "shadow",
+  "canvas": { "width": 200, "height": 40 },
+  "parts": [
+    { "id": "shadow", "asset": "shadow.svg", "parent": null, "position": { "x": 0, "y": 0 }, "pivot": { "x": 0, "y": 0 }, "zIndex": 0 }
+  ]
+}

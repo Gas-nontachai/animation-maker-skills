@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {readFileSync, realpathSync, mkdirSync} from 'node:fs';
+import {readFileSync, realpathSync, mkdirSync, cpSync} from 'node:fs';
 import {execFileSync, spawnSync} from 'node:child_process';
 import {checkVideo} from './check-video.mjs';
 import {checkSkill} from './check-skills.mjs';
@@ -30,6 +30,16 @@ run('render', '--project', './generated-wave', '--output', './generated-wave.mp4
 checkVideo('generated-wave.mp4');
 const metadata = JSON.parse(execFileSync(process.execPath, [cli, 'inspect', '--input', './generated-wave.mp4'], {encoding: 'utf8'}));
 assert.equal(metadata.streams[0].nb_frames, '72');
+for (const name of ['gym-phase2', 'pose-robot', 'pose-transition']) {
+  cpSync(`node_modules/@gasnonthachai/animation-maker/examples/m3/${name}`, name, {recursive: true, errorOnExist: true, force: false});
+  run('validate', '--project', name);
+  run('plan', '--project', name, '--output', `${name}-timeline.json`);
+  assert.deepEqual(JSON.parse(readFileSync(`${name}-timeline.json`, 'utf8')), JSON.parse(readFileSync(`${name}/timeline.json`, 'utf8')));
+}
+run('render', '--project', 'pose-robot', '--output', 'pose-robot.mp4');
+const robotMetadata = JSON.parse(execFileSync(process.execPath, [cli, 'inspect', '--input', 'pose-robot.mp4'], {encoding: 'utf8'}));
+assert.equal(robotMetadata.streams[0].nb_frames, '240');
+console.log('Phase 2 installed-package PASS: three pose/constraint fixture compiles and alternate-rig render with checkout access denied.');
 const installedManifest = JSON.parse(readFileSync('node_modules/@gasnonthachai/animation-maker/package.json', 'utf8'));
 assert.equal(execFileSync(process.execPath, [cli, '--version'], {encoding: 'utf8'}).trim(), installedManifest.version);
 const originalVideo = readFileSync('wave.mp4');
