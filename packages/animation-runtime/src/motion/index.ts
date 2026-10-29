@@ -5,6 +5,7 @@ import {interpolate} from '../interpolation';
 export * from './contracts';
 type Point = {x: number; y: number};
 type Track = SceneTimeline['tracks'][number];
+type Span = {id: string; type: string; target: string; start: number; duration: number};
 const identity: Matrix = [1, 0, 0, 1, 0, 0];
 const point = (m: Matrix, p: Point): Point => ({x: m[0]*p.x + m[2]*p.y + m[4], y: m[1]*p.x + m[3]*p.y + m[5]});
 function inverse(m: Matrix): Matrix {
@@ -19,7 +20,7 @@ export function compileMotion(manifest: unknown, inputs: Record<string, unknown>
   const plan = motionPlanSchema.parse(input);
   const {scene, rigs} = validateScene(manifest, {version: '1.0', fps: plan.fps, duration: plan.duration, tracks: []}, inputs);
   const timeline: SceneTimeline = {version: '1.0', fps: plan.fps, duration: plan.duration, tracks: []};
-  const fail = (a: MotionAction, message: string): never => {throw new Error(`Action ${a.id} (${a.type}, ${a.target}): ${message}`);};
+  const fail = (a: Span, message: string): never => {throw new Error(`Action ${a.id} (${a.type}, ${a.target}): ${message}`);};
   const object = (id: string) => {const o = scene.objects.find(o => o.id === id); if (!o) throw new Error(`Unknown object ${id}`); return o;};
   const mapping = (a: MotionAction, required: (keyof SemanticRig)[]) => {
     const map = plan.rigs[a.target];
@@ -63,6 +64,14 @@ export function compileMotion(manifest: unknown, inputs: Record<string, unknown>
   }
   plan.actions.forEach(visit);
   const actions = [...plan.actions].sort((a,b) => a.start-b.start || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const authored = validateScene(scene, {...timeline, tracks: plan.tracks ?? []}, rigs).timeline.tracks.map(track => {
+    const first = track.keyframes[0], last = track.keyframes.at(-1)!;
+    const span: Span = {id: `track:${track.target.object}/${track.target.part ?? ''}/${track.property}`, type: 'authored', target: track.target.object, start: first.time, duration: last.time-first.time};
+    if (track.target.part && track.property !== 'rotation') fail(span, 'authored part tracks support rotation only; keep joint positions, pivots and scales in the rig');
+    if (track.keyframes.length < 2) fail(span, 'authored track needs at least two keyframes');
+    if (track.keyframes.some(k => Math.abs(k.time*plan.fps-Math.round(k.time*plan.fps)) > 1e-8)) fail(span, 'keyframes must align with frame boundaries');
+    return {track, span};
+  });
   type Claim = {start: number; end: number; action: string};
   const claims = new Map<string, Claim[]>();
   const key = (target: Track['target'], property: Track['property']) => JSON.stringify([target.object,target.part ?? null,property]);
@@ -72,16 +81,21 @@ export function compileMotion(manifest: unknown, inputs: Record<string, unknown>
     const o = object(target.object), p = target.part ? rigs[o.rig].parts.find(p => p.id === target.part)! : o;
     switch (property) {case 'position.x': return p.position.x; case 'position.y': return p.position.y; case 'rotation': return p.rotation; case 'scale.x': return p.scale.x; case 'scale.y': return p.scale.y; case 'opacity': return p.opacity;}
   }
-  function write(a: MotionAction, target: Track['target'], property: Track['property'], end: number, samples?: number[]) {
+  function insert(a: Span, target: Track['target'], property: Track['property'], keys: Track['keyframes']) {
     const k = key(target,property), ranges = claims.get(k) ?? [];
     if (ranges.some(r => a.start < r.end-1e-9 && a.start+a.duration > r.start+1e-9)) fail(a, `conflicting ${k} with ${ranges.find(r => a.start < r.end && a.start+a.duration > r.start)?.action}`);
     const from = value(target,property,a.start);
+    if (a.start > 0 && Math.abs(keys[0].value-from) > 1e-6) fail(a, `discontinuous first value for ${k}: expected ${from}, got ${keys[0].value}`);
     let track = timeline.tracks.find(t => key(t.target,t.property) === k);
     if (!track) {track = {target,property,keyframes:[{time:0,value:from,easing:'linear'}]}; timeline.tracks.push(track);}
-    const keys = samples ? samples.map((v,i) => ({time:(Math.round(a.start*plan.fps)+i)/plan.fps,value:v,easing:'linear' as const})) : [{time:a.start,value:from,easing:a.easing},{time:a.start+a.duration,value:end,easing:'linear' as const}];
     // Preserve the hold before each action, including gaps between actions.
     for (const kf of keys) {const existing = track.keyframes.find(k => Math.abs(k.time-kf.time)<1e-9); if (existing) Object.assign(existing,kf); else track.keyframes.push(kf);}
     track.keyframes.sort((a,b) => a.time-b.time); ranges.push({start:a.start,end:a.start+a.duration,action:a.id}); claims.set(k,ranges);
+  }
+  function write(a: MotionAction, target: Track['target'], property: Track['property'], end: number, samples?: number[]) {
+    const from = value(target,property,a.start);
+    const keys = samples ? samples.map((v,i) => ({time:(Math.round(a.start*plan.fps)+i)/plan.fps,value:v,easing:'linear' as const})) : [{time:a.start,value:from,easing:a.easing},{time:a.start+a.duration,value:end,easing:'linear' as const}];
+    insert(a,target,property,keys);
   }
   function states(time: number) {
     // The evaluator rejects the exclusive endpoint; extend only this private evaluation view by one frame.
@@ -111,9 +125,15 @@ export function compileMotion(manifest: unknown, inputs: Record<string, unknown>
       const target = {object:a.target,part}; write(a,target,'rotation',nearest(angle,value(target,'rotation',a.start)));
     }
   }
-  type Attachment = {action: MotionAction; object: string; start: number; end: number; initial: Matrix; contactHand: Matrix};
+  type Attachment = {action: MotionAction; object: string; start: number; end: number; initial: Matrix};
   const attachments: Attachment[] = [], held = new Map<string, Attachment>();
-  for (const a of actions) {
+  const events = [
+    ...actions.map(action => ({span: action, action, authored: null})),
+    ...authored.map(item => ({span: item.span, action: null, authored: item.track})),
+  ].sort((a,b) => a.span.start-b.span.start || (a.span.id < b.span.id ? -1 : a.span.id > b.span.id ? 1 : 0));
+  for (const event of events) {
+    if (event.authored) {insert(event.span,event.authored.target,event.authored.property,event.authored.keyframes); continue;}
+    const a = event.action!;
     try {
       const map = plan.rigs[a.target], target = {object:a.target};
       if (a.type === 'walk' || a.type === 'sit') {
@@ -131,7 +151,7 @@ export function compileMotion(manifest: unknown, inputs: Record<string, unknown>
         const initial = states(a.start).find(o => o.id === a.object)!.matrix;
         reach(a,point(initial,a.contact));
         const start = a.start+a.duration;
-        const attach = {action:a,object:a.object,start,end:plan.duration,initial,contactHand:handMatrix(a,start)};
+        const attach = {action:a,object:a.object,start,end:plan.duration,initial};
         attachments.push(attach); held.set(a.object,attach);
       } else {
         const attached = held.get(a.object);
@@ -151,7 +171,9 @@ export function compileMotion(manifest: unknown, inputs: Record<string, unknown>
     }
   }
   for (const attachment of attachments) {
-    const {action:a,object:id,start,end,initial,contactHand} = attachment;
+    const {action:a,object:id,start,end,initial} = attachment;
+    // Capture after all authored joint/wrist tracks have been composed, including motion during pickup.
+    const contactHand = handMatrix(a,start);
     const target = {object:id};
     if (timeline.tracks.some(t => t.target.object === id)) fail(a,`attached object ${id} has explicit motion tracks`);
     const offset = multiply(inverse(contactHand),initial);

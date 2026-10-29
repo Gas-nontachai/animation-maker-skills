@@ -105,3 +105,7 @@ node bin/animation-maker.mjs inspect --input output/coffee.mp4
 ```
 
 The plan command creates an unused output file; review it before explicitly replacing timeline.json. No npm publication is implied by the package version. Motion is stylized and capability-limited; hand-to-mouth gestures use reach/hold rather than a drink simulation. Owner M1/M2 regression, prompt-to-video E2E and visual acceptance remain pending. No milestone acceptance or release is performed by implementation checks.
+
+### M3.1 motion quality (unreleased)
+
+Curls and wrist tilts can use optional authored rotation `tracks` in motion.json; the planner composes them before baking held-object motion. Reach remains an endpoint operation. Existing rigs, transparent hand anchors, plans and rendering contracts remain supported; no Curl preset or dependency is added. See the [Gym investigation, comparison artifacts and owner procedure](docs/m3-1-motion-quality.md), plus editable `examples/m3/gym-reference` and `examples/m3/gym-corrected`. Regression, Manual E2E and Visual Acceptance remain owner responsibilities.

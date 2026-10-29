@@ -63,7 +63,8 @@
     "scripts/plan.ts",
     "docs/motion-contract.md",
     "docs/m3-owner-e2e.md",
-    "examples/m3/"
+    "examples/m3/",
+    "docs/m3-1-motion-quality.md"
   ],
   "repository": {
     "type": "git",

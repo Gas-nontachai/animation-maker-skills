@@ -15,6 +15,7 @@ export const motionActionSchema = z.discriminatedUnion('type', [
 ]);
 export const motionPlanSchema = z.object({version: z.literal('1.0'), fps: sceneTimelineSchema.shape.fps, duration: sceneTimelineSchema.shape.duration,
   rigs: z.record(id, semanticRigSchema), actions: z.array(motionActionSchema).min(1),
+  tracks: sceneTimelineSchema.shape.tracks.optional(),
 }).strict();
 export type MotionPlan = z.infer<typeof motionPlanSchema>;
 export type MotionAction = z.infer<typeof motionActionSchema>;

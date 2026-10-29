@@ -1,0 +1,34 @@
+{
+  "version": "1.0",
+  "fps": 24,
+  "duration": 15,
+  "rigs": {
+    "man": {
+      "torso": "torso",
+      "upperArm": "arm-near-upper",
+      "forearm": "arm-near-lower",
+      "hand": "hand",
+      "otherUpperArm": "arm-far-upper",
+      "leftThigh": "thigh-near",
+      "rightThigh": "thigh-far",
+      "leftLowerLeg": "shin-near",
+      "rightLowerLeg": "shin-far"
+    }
+  },
+  "actions": [
+    { "type": "walk", "id": "enter-gym", "target": "man", "start": 0, "duration": 2.5, "dependencies": [], "to": { "x": 340, "y": 157 }, "cycles": 2, "amplitude": 16.5 },
+    { "type": "reach", "id": "reach-dumbbell", "target": "man", "start": 2.75, "duration": 0.75, "dependencies": ["enter-gym"], "to": { "x": 550, "y": 360 } },
+    { "type": "pickUp", "id": "grab-dumbbell", "target": "man", "start": 3.5, "duration": 0.5, "dependencies": ["reach-dumbbell"], "object": "dumbbell", "contact": { "x": 30, "y": 22 } },
+    { "type": "reach", "id": "curl-up-1", "target": "man", "start": 4, "duration": 0.75, "dependencies": ["grab-dumbbell"], "to": { "x": 508, "y": 292 } },
+    { "type": "reach", "id": "curl-down-1", "target": "man", "start": 4.75, "duration": 0.75, "dependencies": ["curl-up-1"], "to": { "x": 530, "y": 390 } },
+    { "type": "reach", "id": "curl-up-2", "target": "man", "start": 5.5, "duration": 0.75, "dependencies": ["curl-down-1"], "to": { "x": 508, "y": 292 } },
+    { "type": "reach", "id": "curl-down-2", "target": "man", "start": 6.25, "duration": 0.75, "dependencies": ["curl-up-2"], "to": { "x": 530, "y": 390 } },
+    { "type": "reach", "id": "curl-up-3", "target": "man", "start": 7, "duration": 0.75, "dependencies": ["curl-down-2"], "to": { "x": 508, "y": 292 } },
+    { "type": "putDown", "id": "rack-dumbbell", "target": "man", "start": 7.75, "duration": 1, "dependencies": ["curl-up-3"], "object": "dumbbell", "to": { "x": 550, "y": 360 } },
+    { "type": "reach", "id": "reach-bottle", "target": "man", "start": 9, "duration": 0.75, "dependencies": ["rack-dumbbell"], "to": { "x": 545, "y": 286 } },
+    { "type": "pickUp", "id": "grab-bottle", "target": "man", "start": 9.75, "duration": 0.5, "dependencies": ["reach-bottle"], "object": "bottle", "contact": { "x": 15, "y": 32 } },
+    { "type": "reach", "id": "drink", "target": "man", "start": 10.25, "duration": 1, "dependencies": ["grab-bottle"], "to": { "x": 527, "y": 262 } },
+    { "type": "putDown", "id": "rack-bottle", "target": "man", "start": 11.75, "duration": 1, "dependencies": ["drink"], "object": "bottle", "to": { "x": 545, "y": 286 } },
+    { "type": "reach", "id": "victory-pump", "target": "man", "start": 13, "duration": 0.75, "dependencies": ["rack-bottle"], "to": { "x": 530, "y": 252 } }
+  ]
+}

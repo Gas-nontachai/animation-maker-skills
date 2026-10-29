@@ -46,3 +46,7 @@ Independently run the original waving project and M2 static/animated/trees fixtu
 ## Release/documentation discrepancy
 
 At implementation start package.json declared 1.1.2; README described 1.1.1 as published, and M2 documentation marked its feature unreleased/owner pending. No registry query or publication was performed here, so the current public registry state is unverified. Version, release workflows, branch protection and publishing settings are unchanged. M3 requires the capability-bearing source checkout until the owner separately approves and verifies a release.
+
+## M3.1 Gym comparison
+
+For elbow-dominant curls, wrist/grip authoring and bottle-opening alignment, follow [M3.1 motion quality](m3-1-motion-quality.md). It preserves the original Gym source/video, provides separate corrected sources and comparison output paths, and documents the optional authored-track extension. A successful render does not grant natural-motion approval.
