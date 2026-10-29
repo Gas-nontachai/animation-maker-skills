@@ -1,0 +1,42 @@
+{
+  "version": "1.0",
+  "canvas": {
+    "width": 1280,
+    "height": 720
+  },
+  "background": "#f3efe5",
+  "objects": [
+    {
+      "id": "chair",
+      "rig": "assets/chair/rig.json",
+      "position": {
+        "x": 500,
+        "y": 400
+      }
+    },
+    {
+      "id": "person",
+      "rig": "assets/person/rig.json",
+      "position": {
+        "x": 360,
+        "y": 350
+      }
+    },
+    {
+      "id": "desk",
+      "rig": "assets/desk/rig.json",
+      "position": {
+        "x": 570,
+        "y": 380
+      }
+    },
+    {
+      "id": "cup",
+      "rig": "assets/cup/rig.json",
+      "position": {
+        "x": 600,
+        "y": 360
+      }
+    }
+  ]
+}

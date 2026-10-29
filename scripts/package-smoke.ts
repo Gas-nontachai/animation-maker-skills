@@ -11,7 +11,7 @@ console.log(`Standalone test project: ${dir}`);
 const cache = path.join(dir, '.npm-cache');
 await mkdir('output', {recursive: true});
 const [packed] = JSON.parse(execFileSync('npm', ['pack', '--json', '--pack-destination', 'output', '--cache', cache], {encoding: 'utf8'}));
-for (const required of ['bin/animation-maker.mjs', 'renderer/src/index.ts', 'packages/animation-runtime/src/schemas/index.ts', 'scripts/environment.ts', 'docs/asset-contract.md']) {
+for (const required of ['bin/animation-maker.mjs', 'renderer/src/index.ts', 'packages/animation-runtime/src/schemas/index.ts', 'scripts/environment.ts', 'docs/asset-contract.md', 'docs/m3-1-phase2.md', 'packages/animation-runtime/src/motion/pose-contracts.ts']) {
   assert.ok(packed.files.some((file: {path: string}) => file.path === required), `Missing package file: ${required}`);
 }
 await writeFile(path.join(dir, 'package.json'), JSON.stringify({name: 'standalone-animation-test', private: true, type: 'module', overrides: {'@gasnonthachai/animation-maker': {zod: '4.6.7'}}}));

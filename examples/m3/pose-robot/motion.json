@@ -1,0 +1,251 @@
+{
+  "version": "1.0",
+  "fps": 24,
+  "duration": 10,
+  "rigs": {
+    "robot": {
+      "torso": "core",
+      "head": "sensor",
+      "upperArm": "servo",
+      "forearm": "lever",
+      "hand": "socket"
+    }
+  },
+  "poses": {
+    "rest": {
+      "joints": {
+        "upperArm": 65,
+        "forearm": -20
+      }
+    },
+    "flex": {
+      "joints": {
+        "upperArm": 65,
+        "forearm": -125
+      }
+    },
+    "sip": {
+      "joints": {
+        "hand": -22.41123686692822
+      }
+    },
+    "grip": {
+      "joints": {
+        "hand": 0
+      }
+    }
+  },
+  "constraints": {
+    "robot": {
+      "upperArm": {
+        "min": -80,
+        "max": 180,
+        "preferred": 65,
+        "stability": 170
+      },
+      "forearm": {
+        "min": -175,
+        "max": 0,
+        "preferred": -65,
+        "stability": 160
+      },
+      "hand": {
+        "min": -180,
+        "max": 180
+      },
+      "head": {
+        "min": -5,
+        "max": 5
+      }
+    }
+  },
+  "actions": [
+    {
+      "type": "pickUp",
+      "id": "pick-weight",
+      "target": "robot",
+      "start": 0,
+      "duration": 1,
+      "object": "weight",
+      "contact": {
+        "x": 30,
+        "y": 22
+      },
+      "bend": "auto"
+    },
+    {
+      "type": "pose",
+      "id": "settle",
+      "target": "robot",
+      "start": 1,
+      "duration": 0.5,
+      "pose": "rest",
+      "dependencies": [
+        "pick-weight"
+      ]
+    },
+    {
+      "type": "pose",
+      "id": "up-0",
+      "target": "robot",
+      "start": 1.5,
+      "duration": 0.5,
+      "pose": "flex",
+      "dependencies": [
+        "settle"
+      ]
+    },
+    {
+      "type": "pose",
+      "id": "down-0",
+      "target": "robot",
+      "start": 2,
+      "duration": 0.5,
+      "pose": "rest",
+      "dependencies": [
+        "up-0"
+      ]
+    },
+    {
+      "type": "pose",
+      "id": "up-1",
+      "target": "robot",
+      "start": 2.5,
+      "duration": 0.5,
+      "pose": "flex",
+      "dependencies": [
+        "down-0"
+      ]
+    },
+    {
+      "type": "pose",
+      "id": "down-1",
+      "target": "robot",
+      "start": 3,
+      "duration": 0.5,
+      "pose": "rest",
+      "dependencies": [
+        "up-1"
+      ]
+    },
+    {
+      "type": "pose",
+      "id": "up-2",
+      "target": "robot",
+      "start": 3.5,
+      "duration": 0.5,
+      "pose": "flex",
+      "dependencies": [
+        "down-1"
+      ]
+    },
+    {
+      "type": "pose",
+      "id": "down-2",
+      "target": "robot",
+      "start": 4,
+      "duration": 0.5,
+      "pose": "rest",
+      "dependencies": [
+        "up-2"
+      ]
+    },
+    {
+      "type": "putDown",
+      "id": "return-weight",
+      "target": "robot",
+      "start": 5,
+      "duration": 1,
+      "object": "weight",
+      "to": {
+        "x": 560,
+        "y": 390
+      },
+      "dependencies": [
+        "down-2"
+      ],
+      "bend": "auto"
+    },
+    {
+      "type": "pickUp",
+      "id": "pick-water",
+      "target": "robot",
+      "start": 6.25,
+      "duration": 0.75,
+      "object": "water",
+      "contact": {
+        "x": 15,
+        "y": 32
+      },
+      "dependencies": [
+        "return-weight"
+      ],
+      "bend": "auto"
+    },
+    {
+      "type": "reach",
+      "id": "sip",
+      "target": "robot",
+      "start": 7,
+      "duration": 1,
+      "to": {
+        "x": 490.4585736003203,
+        "y": 311.7435086792658
+      },
+      "dependencies": [
+        "pick-water"
+      ],
+      "bend": "auto"
+    },
+    {
+      "type": "pose",
+      "id": "tilt",
+      "target": "robot",
+      "start": 7,
+      "duration": 1,
+      "pose": "sip",
+      "dependencies": [
+        "pick-water"
+      ]
+    },
+    {
+      "type": "putDown",
+      "id": "return-water",
+      "target": "robot",
+      "start": 8.5,
+      "duration": 1,
+      "object": "water",
+      "to": {
+        "x": 570,
+        "y": 320
+      },
+      "dependencies": [
+        "sip",
+        "tilt"
+      ],
+      "bend": "auto"
+    },
+    {
+      "type": "pose",
+      "id": "untilt",
+      "target": "robot",
+      "start": 8.5,
+      "duration": 1,
+      "pose": "grip",
+      "dependencies": [
+        "sip",
+        "tilt"
+      ]
+    }
+  ],
+  "secondary": [
+    {
+      "target": "robot",
+      "joint": "head",
+      "start": 1.5,
+      "duration": 3,
+      "intensity": 0.3,
+      "amplitude": 2
+    }
+  ]
+}
