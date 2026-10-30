@@ -1,0 +1,253 @@
+{
+  "version": "1.0",
+  "renderingMode": "hybrid",
+  "canvas": {
+    "width": 1280,
+    "height": 720
+  },
+  "background": "#e9dfcd",
+  "objects": [
+    {
+      "id": "wall",
+      "model": "wall.json",
+      "position": [
+        0,
+        2,
+        -2.5
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "id": "window",
+      "model": "window.json",
+      "position": [
+        -1.5,
+        2.3,
+        -2.4
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "id": "windowFrame",
+      "model": "frame.json",
+      "position": [
+        -1.5,
+        2.3,
+        -2.28
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "id": "man",
+      "model": "man.json",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "id": "table",
+      "model": "table.json",
+      "position": [
+        0,
+        1.2,
+        1.1
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "id": "legLeft",
+      "model": "leg.json",
+      "position": [
+        -0.8,
+        0.6,
+        1.1
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "id": "legRight",
+      "model": "leg.json",
+      "position": [
+        0.8,
+        0.6,
+        1.1
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "id": "chair",
+      "model": "chair.json",
+      "position": [
+        0,
+        0.99,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "id": "chairBack",
+      "model": "chair.json",
+      "position": [
+        0,
+        1.5,
+        -0.4
+      ],
+      "rotation": [
+        1.5707963267948966,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "id": "floor",
+      "model": "floor.json",
+      "position": [
+        0,
+        -0.05,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "id": "cup",
+      "model": "cup.json",
+      "position": [
+        0.55,
+        1.44,
+        0.7
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    }
+  ],
+  "layers": [
+    {
+      "id": "world-sign",
+      "type": "world-space-2d",
+      "asset": "overlay.svg",
+      "order": 0,
+      "position": [
+        -1.5,
+        3.4,
+        -2.25
+      ],
+      "size": [
+        1.5,
+        0.28
+      ],
+      "facing": "fixed"
+    },
+    {
+      "id": "overlay",
+      "type": "screen-space",
+      "asset": "overlay.svg",
+      "order": 1,
+      "position": [
+        40,
+        35,
+        0
+      ],
+      "size": [
+        320,
+        60
+      ]
+    }
+  ]
+}

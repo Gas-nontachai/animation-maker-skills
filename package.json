@@ -14,7 +14,9 @@
     "security:check": "node scripts/security-gate.mjs",
     "knip": "knip",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test:m4": "node --import tsx scripts/m4-verify.ts",
+    "examples:m4": "node --import tsx scripts/m4-examples.ts"
   },
   "license": "MIT",
   "type": "module",
@@ -23,12 +25,15 @@
     "node": ">=22"
   },
   "dependencies": {
+    "@react-three/fiber": "9.8.2",
     "@remotion/bundler": "4.0.539",
     "@remotion/renderer": "4.0.539",
+    "@remotion/three": "4.0.539",
     "@xmldom/xmldom": "0.8.15",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "remotion": "4.0.539",
+    "three": "0.186.1",
     "tsx": "4.23.15",
     "zod": "4.6.7"
   },
@@ -36,6 +41,7 @@
     "@types/node": "^22.0.0",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "@types/three": "^0.186.0",
     "knip": "6.43.0",
     "prettier": "3.9.10",
     "typescript": "5.9.3",
@@ -70,7 +76,9 @@
     "docs/m3-owner-e2e.md",
     "examples/m3/",
     "docs/m3-1-motion-quality.md",
-    "docs/m3-1-phase2.md"
+    "docs/m3-1-phase2.md",
+    "examples/m4/",
+    "docs/m4-cinematic.md"
   ],
   "repository": {
     "type": "git",

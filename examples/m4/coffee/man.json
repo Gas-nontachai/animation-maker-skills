@@ -1,0 +1,554 @@
+{
+  "version": "1.0",
+  "id": "man",
+  "materials": {
+    "shirt": {
+      "color": "#f2c534",
+      "roughness": 0.8
+    },
+    "skin": {
+      "color": "#bd7952",
+      "roughness": 0.8
+    },
+    "hair": {
+      "color": "#342622",
+      "roughness": 0.8
+    },
+    "pants": {
+      "color": "#334d69",
+      "roughness": 0.8
+    },
+    "eye": {
+      "color": "#201c22",
+      "roughness": 0.8
+    }
+  },
+  "joints": [
+    {
+      "id": "torso",
+      "parent": null,
+      "position": [
+        0,
+        1.5,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": {
+        "type": "box",
+        "size": [
+          0.65,
+          0.65,
+          0.34
+        ]
+      },
+      "material": "shirt",
+      "geometryPosition": [
+        0,
+        0,
+        0
+      ],
+      "anchors": {}
+    },
+    {
+      "id": "head",
+      "parent": "torso",
+      "position": [
+        0,
+        0.58,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": {
+        "type": "sphere",
+        "radius": 0.25
+      },
+      "material": "skin",
+      "geometryPosition": [
+        0,
+        0,
+        0
+      ],
+      "anchors": {}
+    },
+    {
+      "id": "hair",
+      "parent": "head",
+      "position": [
+        0,
+        0.13,
+        -0.03
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": {
+        "type": "box",
+        "size": [
+          0.45,
+          0.22,
+          0.38
+        ]
+      },
+      "material": "hair",
+      "geometryPosition": [
+        0,
+        0,
+        0
+      ],
+      "anchors": {}
+    },
+    {
+      "id": "nose",
+      "parent": "head",
+      "position": [
+        0,
+        0,
+        0.25
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": {
+        "type": "sphere",
+        "radius": 0.065
+      },
+      "material": "skin",
+      "geometryPosition": [
+        0,
+        0,
+        0
+      ],
+      "anchors": {}
+    },
+    {
+      "id": "leftEye",
+      "parent": "head",
+      "position": [
+        -0.09,
+        0.055,
+        0.23
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": {
+        "type": "sphere",
+        "radius": 0.025
+      },
+      "material": "eye",
+      "geometryPosition": [
+        0,
+        0,
+        0
+      ],
+      "anchors": {}
+    },
+    {
+      "id": "rightEye",
+      "parent": "head",
+      "position": [
+        0.09,
+        0.055,
+        0.23
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": {
+        "type": "sphere",
+        "radius": 0.025
+      },
+      "material": "eye",
+      "geometryPosition": [
+        0,
+        0,
+        0
+      ],
+      "anchors": {}
+    },
+    {
+      "id": "rightUpperArm",
+      "parent": "torso",
+      "position": [
+        0.4,
+        0.23,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": {
+        "type": "box",
+        "size": [
+          0.17,
+          0.42,
+          0.17
+        ]
+      },
+      "material": "shirt",
+      "geometryPosition": [
+        0,
+        -0.21,
+        0
+      ],
+      "anchors": {}
+    },
+    {
+      "id": "rightForearm",
+      "parent": "rightUpperArm",
+      "position": [
+        0,
+        -0.42,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": {
+        "type": "box",
+        "size": [
+          0.13,
+          0.4,
+          0.13
+        ]
+      },
+      "material": "skin",
+      "geometryPosition": [
+        0,
+        -0.2,
+        0
+      ],
+      "anchors": {}
+    },
+    {
+      "id": "rightHand",
+      "parent": "rightForearm",
+      "position": [
+        0,
+        -0.4,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": {
+        "type": "sphere",
+        "radius": 0.085
+      },
+      "material": "skin",
+      "geometryPosition": [
+        0,
+        0,
+        0
+      ],
+      "anchors": {
+        "grip": [
+          -0.17,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "leftUpperArm",
+      "parent": "torso",
+      "position": [
+        -0.4,
+        0.23,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": {
+        "type": "box",
+        "size": [
+          0.17,
+          0.42,
+          0.17
+        ]
+      },
+      "material": "shirt",
+      "geometryPosition": [
+        0,
+        -0.21,
+        0
+      ],
+      "anchors": {}
+    },
+    {
+      "id": "leftForearm",
+      "parent": "leftUpperArm",
+      "position": [
+        0,
+        -0.42,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": {
+        "type": "box",
+        "size": [
+          0.13,
+          0.4,
+          0.13
+        ]
+      },
+      "material": "skin",
+      "geometryPosition": [
+        0,
+        -0.2,
+        0
+      ],
+      "anchors": {}
+    },
+    {
+      "id": "leftHand",
+      "parent": "leftForearm",
+      "position": [
+        0,
+        -0.4,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": {
+        "type": "sphere",
+        "radius": 0.085
+      },
+      "material": "skin",
+      "geometryPosition": [
+        0,
+        0,
+        0
+      ],
+      "anchors": {}
+    },
+    {
+      "id": "leftThigh",
+      "parent": "torso",
+      "position": [
+        -0.2,
+        -0.4,
+        0
+      ],
+      "rotation": [
+        -1.5707963267948966,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": {
+        "type": "box",
+        "size": [
+          0.22,
+          0.5,
+          0.22
+        ]
+      },
+      "material": "pants",
+      "geometryPosition": [
+        0,
+        -0.25,
+        0
+      ],
+      "anchors": {}
+    },
+    {
+      "id": "leftLowerLeg",
+      "parent": "leftThigh",
+      "position": [
+        0,
+        -0.5,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": {
+        "type": "box",
+        "size": [
+          0.19,
+          0.55,
+          0.19
+        ]
+      },
+      "material": "pants",
+      "geometryPosition": [
+        0,
+        0,
+        -0.275
+      ],
+      "anchors": {}
+    },
+    {
+      "id": "rightThigh",
+      "parent": "torso",
+      "position": [
+        0.2,
+        -0.4,
+        0
+      ],
+      "rotation": [
+        -1.5707963267948966,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": {
+        "type": "box",
+        "size": [
+          0.22,
+          0.5,
+          0.22
+        ]
+      },
+      "material": "pants",
+      "geometryPosition": [
+        0,
+        -0.25,
+        0
+      ],
+      "anchors": {}
+    },
+    {
+      "id": "rightLowerLeg",
+      "parent": "rightThigh",
+      "position": [
+        0,
+        -0.5,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "geometry": {
+        "type": "box",
+        "size": [
+          0.19,
+          0.55,
+          0.19
+        ]
+      },
+      "material": "pants",
+      "geometryPosition": [
+        0,
+        0,
+        -0.275
+      ],
+      "anchors": {}
+    }
+  ]
+}

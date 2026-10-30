@@ -1,7 +1,14 @@
-import {readFile, realpath, lstat} from 'node:fs/promises';
+import {readFile, realpath, lstat, stat} from 'node:fs/promises';
 import path from 'node:path';
 import {parseArgs} from 'node:util';
 import {DOMParser, XMLSerializer} from '@xmldom/xmldom';
+import {
+  cinematicSceneSchema,
+  cinematicTimelineSchema,
+  model3dSchema,
+  validateCinematic,
+} from '../packages/animation-runtime/src/cinematic';
+import {validateGlb} from '../packages/animation-runtime/src/glb';
 import {validateAnimation} from '../packages/animation-runtime/src/schemas';
 import {
   sceneSchema,
@@ -147,7 +154,80 @@ export async function loadProject(project: string) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
   }
   if (isScene) {
-    const scene = sceneSchema.parse(await json('scene.json'));
+    const raw = await json('scene.json');
+    if (raw.renderingMode === '3d' || raw.renderingMode === 'hybrid') {
+      const cinematic = cinematicSceneSchema.parse(raw);
+      const timeline = cinematicTimelineSchema.parse(
+        await json('timeline.json'),
+      );
+      const models: Record<
+        string,
+        ReturnType<typeof model3dSchema.parse>
+      > = Object.create(null);
+      const glbs: Record<string, string> = Object.create(null);
+      const overlays: Record<
+        string,
+        {markup: string; viewBox: [number, number, number, number]}
+      > = Object.create(null);
+      let modelBytes = 0;
+      const costs: Record<string, number> = Object.create(null);
+      for (const o of cinematic.objects) {
+        if (Object.hasOwn(models, o.model) || Object.hasOwn(glbs, o.model))
+          continue;
+        const file = await confined(root, o.model);
+        const size = (await stat(file)).size;
+        modelBytes += size;
+        if (size > 20 * 1024 * 1024 || modelBytes > 64 * 1024 * 1024)
+          throw new Error('Scene model size budget exceeded');
+        const bytes = await readFile(file);
+        if (bytes.length > 20 * 1024 * 1024)
+          throw new Error('Model size budget exceeded');
+        if (path.extname(file).toLowerCase() === '.glb') {
+          const glb = validateGlb(bytes);
+          costs[o.model] = (glb.accessors ?? []).reduce(
+            (n: number, a: {count: number}) => n + a.count,
+            0,
+          );
+          glbs[o.model] = bytes.toString('base64');
+        } else if (path.extname(file).toLowerCase() === '.json')
+          models[o.model] = model3dSchema.parse(
+            JSON.parse(bytes.toString('utf8')),
+          );
+        else throw new Error('Only procedural JSON and GLB models supported');
+      }
+      if (
+        cinematic.objects.reduce(
+          (n, o) =>
+            n + (models[o.model]?.joints.filter((j) => j.geometry).length ?? 0),
+          0,
+        ) > 4096 ||
+        cinematic.objects.reduce((n, o) => n + (costs[o.model] ?? 0), 0) >
+          1000000
+      )
+        throw new Error('Scene geometry instance budget exceeded');
+      for (const layer of cinematic.layers) {
+        if ((await stat(await confined(root, layer.asset))).size > 1024 * 1024)
+          throw new Error('SVG layer size budget exceeded');
+        const bytes = await readFile(await confined(root, layer.asset));
+        if (bytes.length > 1024 * 1024)
+          throw new Error('SVG layer size budget exceeded');
+        const source = bytes.toString('utf8');
+        const markup = safeSvg(source);
+        const doc = new DOMParser().parseFromString(source, 'image/svg+xml');
+        const box = doc.documentElement.getAttribute('viewBox')!;
+        overlays[layer.asset] = {
+          markup,
+          viewBox: box
+            .trim()
+            .split(/[\s,]+/)
+            .map(Number) as [number, number, number, number],
+        };
+      }
+      validateCinematic(cinematic, timeline, models);
+      return {cinematic, timeline, models, glbs, overlays};
+    }
+    if (raw.renderingMode === '2d') delete raw.renderingMode;
+    const scene = sceneSchema.parse(raw);
     const inputs: Record<string, unknown> = Object.create(null);
     const assets: Record<string, Record<string, string>> = Object.create(null);
     for (const object of scene.objects) {

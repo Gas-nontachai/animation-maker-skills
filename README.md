@@ -124,3 +124,9 @@ npm run knip          # Find unused files, exports, and dependencies
 ```
 
 Pull requests and the npm release workflow run formatting and Knip checks before tests. Example fixtures and SVG artwork are excluded from formatting to preserve reference data.
+
+### M4 hybrid cinematic candidate
+
+Cinematic projects use deterministic Three.js world geometry, perspective or orthographic cameras, hard-cut shot sequences, keyed joints and contact attachments. Hybrid projects combine world geometry with camera-aware SVG planes and independent screen overlays. Legacy SVG projects retain their existing format and evaluator.
+
+See the [cinematic contract and import limits](docs/m4-cinematic.md), with editable coffee, hybrid and GLB projects under `examples/m4`. Run `animation-maker doctor --3d`, then the ordinary validate/render/inspect commands. `npm run test:m4 -- <new evidence directory>` renders the examples and checks metadata and sampled decoded frames. This is an unpublished candidate; final M4 acceptance is recorded separately from automated checks.
