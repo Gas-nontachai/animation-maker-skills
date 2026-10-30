@@ -4,18 +4,18 @@ Verified 2026-10-27 on macOS arm64, Node.js 22.23.4, npm 10.9.9 and Codex CLI 0.
 
 ## Definition of Done
 
-| Required check | Evidence / result |
-| --- | --- |
-| GitHub Skills install in an empty project | PASS for installation: real skills CLI downloaded all three Skills. FAIL for candidate availability: remote animate still does not pin 1.1.0. |
-| Codex detects the animation prompt | PASS for locally installed candidate Skills: actual Codex CLI selected animate from the exact Thai prompt, read its instructions, detected the missing runtime and requested package/browser approval. |
-| Runtime installs from npm after authorization | BLOCKED: registry returns E404 for @gasnonthachai/animation-maker@1.1.0; npm whoami reports ENEEDAUTH on the maintainer machine. No tarball was substituted in the public release test. |
-| Chromium resolves/installs | PASS in independent artifact tests: explicit download of 170.9 MB, progress, extraction and usable project-local executable. An unversioned incomplete platform cache was seeded before setup and recovered through public ensureBrowser. |
-| New SVG character generated | PASS: create command authors new six-part robot SVGs and rig, not copied example artwork. Generated sources retained. |
-| Valid timeline generated | PASS: reusable three-wave preset, 24 FPS, three seconds, 72 frames, schema validation and exact frame rotations tested. |
-| Project validation | PASS for original example and generated robot. |
-| Authorized rendering | PASS for both characters with checkout reads denied by OS policy. No per-character renderer changes. |
-| Metadata and actual movement | PASS for both: H.264, 1280×720, 24 FPS, 72 frames, three seconds, no audio; decoded pixels verify down/raised arm at six frames. |
-| No original checkout at runtime | PASS in artifact tests: reading the original package.json failed with EPERM, while installed CLI doctor/create/validate/render/inspect succeeded. |
+| Required check                                | Evidence / result                                                                                                                                                                                                                         |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GitHub Skills install in an empty project     | PASS for installation: real skills CLI downloaded all three Skills. FAIL for candidate availability: remote animate still does not pin 1.1.0.                                                                                             |
+| Codex detects the animation prompt            | PASS for locally installed candidate Skills: actual Codex CLI selected animate from the exact Thai prompt, read its instructions, detected the missing runtime and requested package/browser approval.                                    |
+| Runtime installs from npm after authorization | BLOCKED: registry returns E404 for @gasnonthachai/animation-maker@1.1.0; npm whoami reports ENEEDAUTH on the maintainer machine. No tarball was substituted in the public release test.                                                   |
+| Chromium resolves/installs                    | PASS in independent artifact tests: explicit download of 170.9 MB, progress, extraction and usable project-local executable. An unversioned incomplete platform cache was seeded before setup and recovered through public ensureBrowser. |
+| New SVG character generated                   | PASS: create command authors new six-part robot SVGs and rig, not copied example artwork. Generated sources retained.                                                                                                                     |
+| Valid timeline generated                      | PASS: reusable three-wave preset, 24 FPS, three seconds, 72 frames, schema validation and exact frame rotations tested.                                                                                                                   |
+| Project validation                            | PASS for original example and generated robot.                                                                                                                                                                                            |
+| Authorized rendering                          | PASS for both characters with checkout reads denied by OS policy. No per-character renderer changes.                                                                                                                                      |
+| Metadata and actual movement                  | PASS for both: H.264, 1280×720, 24 FPS, 72 frames, three seconds, no audio; decoded pixels verify down/raised arm at six frames.                                                                                                          |
+| No original checkout at runtime               | PASS in artifact tests: reading the original package.json failed with EPERM, while installed CLI doctor/create/validate/render/inspect succeeded.                                                                                         |
 
 **The complete public one-prompt workflow is not shipped.** Registry publication, updated GitHub Skills and the subsequent no-tarball registry demonstration remain mandatory. A local artifact demonstration is deliberately reported separately from the release gate.
 

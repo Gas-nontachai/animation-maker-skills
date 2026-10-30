@@ -1,0 +1,28 @@
+{
+  "version": "1.0",
+  "fps": 24,
+  "duration": 1,
+  "shots": [
+    {
+      "id": "glb",
+      "startFrame": 0,
+      "endFrame": 24,
+      "camera": {
+        "projection": "orthographic",
+        "position": [
+          0,
+          1,
+          4
+        ],
+        "target": [
+          0,
+          1,
+          0
+        ],
+        "span": 3
+      },
+      "transition": "cut"
+    }
+  ],
+  "tracks": []
+}

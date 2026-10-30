@@ -8,14 +8,14 @@ Before implementation the working branch was `feat/m3-1-motion-quality` at `6b6e
 
 A read-only registry query (`npm view @gasnonthachai/animation-maker version gitHead --json`) confirmed published **1.4.0**, gitHead **2eb32e79ff46c6068b617fa716cc93fb9f49246b**. Base M2/M3 are published; blanket “M3 unreleased” wording was corrected in current guidance. The source manifest is still 1.1.2 under the existing release workflow. Candidate Phase 1/2 fields are not implied by published 1.4.0 or the M1 compatibility range. No version/release-pipeline change or publication was made.
 
-| Requirement | Already present in Phase 1 | Phase 2 addition |
-|---|---|---|
-| Joint-driven curls | Authored local rotation tracks | Named semantic configurations and validated limits/preferences |
-| Transitions | Existing easing, continuous interval composition | Pose actions with explicit transition duration/easing |
-| Grip | World-matrix attachment, wrist tracks, optional palm, transparent anchors | Pose-based hand tilt uses the same baking; tested on a different rig |
-| Pose selection | Agent-selected endpoints/angles | Reusable pose library and constrained choice between existing Reach elbow branches |
-| Constraints | Input/reference validation | Per-role bounds, preferred angles and interval stability checks |
-| Secondary motion | Could be authored manually | Optional bounded head/torso rotation samples, disabled by default, with conservative interference rejection |
+| Requirement        | Already present in Phase 1                                                | Phase 2 addition                                                                                            |
+| ------------------ | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Joint-driven curls | Authored local rotation tracks                                            | Named semantic configurations and validated limits/preferences                                              |
+| Transitions        | Existing easing, continuous interval composition                          | Pose actions with explicit transition duration/easing                                                       |
+| Grip               | World-matrix attachment, wrist tracks, optional palm, transparent anchors | Pose-based hand tilt uses the same baking; tested on a different rig                                        |
+| Pose selection     | Agent-selected endpoints/angles                                           | Reusable pose library and constrained choice between existing Reach elbow branches                          |
+| Constraints        | Input/reference validation                                                | Per-role bounds, preferred angles and interval stability checks                                             |
+| Secondary motion   | Could be authored manually                                                | Optional bounded head/torso rotation samples, disabled by default, with conservative interference rejection |
 
 Runtime additions are justified by constraints that raw tracks could not validate and reuse of semantic poses across action sequences. There is no new Curl or drink preset, natural-language parser, renderer, animation evaluator, generalized IK, physics or external inference API. The existing agent interprets language and authors rig-specific profiles. Users describe intent; they need not provide joint rotations.
 
@@ -51,12 +51,34 @@ The additive bend value `auto` is the normalized default: it retains effective l
 ```json
 {
   "poses": {
-    "rest": {"joints": {"upperArm": -12, "forearm": -10}, "preferred": {"hand": 0}},
-    "flexed": {"joints": {"upperArm": -12, "forearm": -125}, "preferred": {"hand": 0}}
+    "rest": {
+      "joints": {"upperArm": -12, "forearm": -10},
+      "preferred": {"hand": 0}
+    },
+    "flexed": {
+      "joints": {"upperArm": -12, "forearm": -125},
+      "preferred": {"hand": 0}
+    }
   },
   "actions": [
-    {"id": "settle", "type": "pose", "target": "actor", "pose": "rest", "start": 1, "duration": 0.5, "easing": "easeInOut"},
-    {"id": "curl-up", "type": "pose", "target": "actor", "pose": "flexed", "start": 1.5, "duration": 0.5, "dependencies": ["settle"]}
+    {
+      "id": "settle",
+      "type": "pose",
+      "target": "actor",
+      "pose": "rest",
+      "start": 1,
+      "duration": 0.5,
+      "easing": "easeInOut"
+    },
+    {
+      "id": "curl-up",
+      "type": "pose",
+      "target": "actor",
+      "pose": "flexed",
+      "start": 1.5,
+      "duration": 0.5,
+      "dependencies": ["settle"]
+    }
   ]
 }
 ```
@@ -78,7 +100,19 @@ For drinking, author grasp and opening points from the prop geometry and a mouth
 `head` is an additional optional semantic role. It is not required by legacy presets. An optional `secondary` array contains explicit supporting-motion intervals:
 
 ```json
-{"secondary": [{"target": "actor", "joint": "head", "start": 2, "duration": 3, "intensity": 0.3, "amplitude": 2, "cycles": 1}]}
+{
+  "secondary": [
+    {
+      "target": "actor",
+      "joint": "head",
+      "start": 2,
+      "duration": 3,
+      "intensity": 0.3,
+      "amplitude": 2,
+      "cycles": 1
+    }
+  ]
+}
 ```
 
 Joint is `head` or `torso`; intensity is 0–1 and defaults to **0** (disabled). Amplitude is 0–5 degrees, default 2; cycles is integer 1–20, default 1. Timing must be frame-aligned, in range, with at least four frames per cycle. Active samples are an envelope-bounded sine around the baseline rotation, explicitly returning to it at both boundaries. Existing linear interpolation joins deterministic per-frame samples; there is no random or runtime procedural state.
@@ -89,13 +123,13 @@ Secondary motion respects all joint limits/stability. It rejects primary propert
 
 All prior `gym-reference`, `gym-corrected` (Phase 1) and coffee files are preserved. New editable sources:
 
-| Project | Purpose | Retained video | Metadata |
-|---|---|---|---|
-| examples/m3/gym-reference | Original endpoint-driven curls | output/m3-1-phase2/reference.mp4 | 15 s / 360 frames |
-| examples/m3/gym-corrected | Phase 1 authored rotations | output/m3-1-phase2/phase1.mp4 | 15 s / 360 frames |
-| examples/m3/gym-phase2 | Named curl/grip poses, automatic constrained bend, subtle head support | output/m3-1-phase2/phase2.mp4 | 15 s / 360 frames |
-| examples/m3/pose-robot | Different IDs, horizontal neutral arm, 55/75 link lengths, rotated/scaled placement, transparent grip anchor | output/m3-1-phase2/robot.mp4 | 10 s / 240 frames |
-| examples/m3/pose-transition | Walk → settle pose → sit → ready pose → reach, continuing through pickup/return | output/m3-1-phase2/transition.mp4 | 8 s / 192 frames |
+| Project                     | Purpose                                                                                                      | Retained video                    | Metadata          |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------ | --------------------------------- | ----------------- |
+| examples/m3/gym-reference   | Original endpoint-driven curls                                                                               | output/m3-1-phase2/reference.mp4  | 15 s / 360 frames |
+| examples/m3/gym-corrected   | Phase 1 authored rotations                                                                                   | output/m3-1-phase2/phase1.mp4     | 15 s / 360 frames |
+| examples/m3/gym-phase2      | Named curl/grip poses, automatic constrained bend, subtle head support                                       | output/m3-1-phase2/phase2.mp4     | 15 s / 360 frames |
+| examples/m3/pose-robot      | Different IDs, horizontal neutral arm, 55/75 link lengths, rotated/scaled placement, transparent grip anchor | output/m3-1-phase2/robot.mp4      | 10 s / 240 frames |
+| examples/m3/pose-transition | Walk → settle pose → sit → ready pose → reach, continuing through pickup/return                              | output/m3-1-phase2/transition.mp4 | 8 s / 192 frames  |
 
 All are H.264, 1280×720, 24 FPS, no audio. Each source project preserves SVGs, rigs, scene.json, motion.json and compiled timeline.json. Videos, decoded PNGs, baseline hash manifest and comparison-metadata.json are gitignored under the separate output directory. PNGs at Gym frames 120/270, robot frames 48/192 and transition frame 96 were inspected as developer evidence, not owner approval.
 

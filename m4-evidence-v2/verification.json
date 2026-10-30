@@ -1,0 +1,26 @@
+[
+  {
+    "project": "coffee",
+    "video": "/Users/nonthachai.p/Dev/animation-maker-skills/m4-evidence-v2/coffee.mp4",
+    "frames": [0, 47, 48, 70, 99, 100, 130, 169, 170, 190, 191, 239],
+    "metadata": "PASS",
+    "nonblankSamples": "PASS",
+    "visualAcceptance": "Manual review required"
+  },
+  {
+    "project": "hybrid",
+    "video": "/Users/nonthachai.p/Dev/animation-maker-skills/m4-evidence-v2/hybrid.mp4",
+    "frames": [0, 47, 48, 70, 99, 100, 130, 169, 170, 190, 191, 239],
+    "metadata": "PASS",
+    "nonblankSamples": "PASS",
+    "visualAcceptance": "Manual review required"
+  },
+  {
+    "project": "glb",
+    "video": "/Users/nonthachai.p/Dev/animation-maker-skills/m4-evidence-v2/glb.mp4",
+    "frames": [0, 23],
+    "metadata": "PASS",
+    "nonblankSamples": "PASS",
+    "visualAcceptance": "Manual review required"
+  }
+]

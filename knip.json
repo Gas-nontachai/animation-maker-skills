@@ -1,0 +1,21 @@
+{
+  "$schema": "https://unpkg.com/knip/schema.json",
+  "entry": [
+    "renderer/src/index.ts",
+    "packages/animation-runtime/src/index.ts",
+    "tests/installed-package.mjs",
+    "scripts/create.ts",
+    "scripts/doctor.ts",
+    "scripts/inspect.ts",
+    "scripts/plan.ts"
+  ],
+  "project": [
+    "bin/**/*.mjs",
+    "scripts/**/*.{ts,mjs}",
+    "packages/**/*.ts",
+    "packages/**/*.tsx",
+    "renderer/**/*.{ts,tsx}",
+    "tests/**/*.{ts,tsx,mjs}"
+  ],
+  "ignoreBinaries": ["sandbox-exec"]
+}

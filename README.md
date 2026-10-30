@@ -113,3 +113,20 @@ Curls and wrist tilts can use optional authored rotation `tracks` in motion.json
 ### M3.1 Phase 2 pose planning (candidate)
 
 Optional semantic poses, joint limits/preferences/stability and explicit low-intensity secondary motion compile into existing M2 keyframes. The agent selects rig-appropriate poses from action intent; users need not specify joint rotations. See the [Phase 2 contract and owner comparison procedure](docs/m3-1-phase2.md), with separate Gym, alternate robot and walk/sit/reach examples. Final owner regression, E2E and visual review remain pending.
+
+### Development checks
+
+```bash
+npm ci --ignore-scripts
+npm run format        # Format source and documentation
+npm run format:check  # Check formatting without writing
+npm run knip          # Find unused files, exports, and dependencies
+```
+
+Pull requests and the npm release workflow run formatting and Knip checks before tests. Example fixtures and SVG artwork are excluded from formatting to preserve reference data.
+
+### M4 hybrid cinematic candidate
+
+Cinematic projects use deterministic Three.js world geometry, perspective or orthographic cameras, hard-cut shot sequences, keyed joints and contact attachments. Hybrid projects combine world geometry with camera-aware SVG planes and independent screen overlays. Legacy SVG projects retain their existing format and evaluator.
+
+See the [cinematic contract and import limits](docs/m4-cinematic.md), with editable coffee, hybrid and GLB projects under `examples/m4`. Run `animation-maker doctor --3d`, then the ordinary validate/render/inspect commands. `npm run test:m4 -- <new evidence directory>` renders the examples and checks metadata and sampled decoded frames. This is an unpublished candidate; final M4 acceptance is recorded separately from automated checks.
