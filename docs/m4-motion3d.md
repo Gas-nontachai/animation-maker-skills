@@ -14,14 +14,27 @@ Example use (from an authorized developer/agent TypeScript environment):
 
 ```ts
 import {compileMotion3D} from './packages/animation-runtime/src/motion3d';
-const compiled = compileMotion3D({
-  version: '1.0',
-  actions: [
-    {type:'reach', object:'man', shoulder:'rightUpperArm',
-     elbow:'rightForearm', hand:'rightHand',
-     startFrame:5, endFrame:40, from:[0.7,1.1,0.2], to:[0.6,1.5,0.35]}
-  ]
-}, scene, timeline, models);
+const compiled = compileMotion3D(
+  {
+    version: '1.0',
+    actions: [
+      {
+        type: 'reach',
+        object: 'man',
+        shoulder: 'rightUpperArm',
+        elbow: 'rightForearm',
+        hand: 'rightHand',
+        startFrame: 5,
+        endFrame: 40,
+        from: [0.7, 1.1, 0.2],
+        to: [0.6, 1.5, 0.35],
+      },
+    ],
+  },
+  scene,
+  timeline,
+  models,
+);
 ```
 
 Limitations: this is NOT a full prompt-to-motion synthesizer or a generalized IK engine. Reach currently requires a direct upper-arm/forearm/hand chain, downward neutral segments, no pre-rotation of the arm, and an unrotated unit-scaled single torso parent. Reach targets use procedural model coordinates, not arbitrary world transforms. Each action must own distinct output tracks; repeated actions on the same joint or overlapping authored tracks fail explicitly. Hand grip, pickup/release attachments, walk gait, seated pose generation and release continuity still need to be authored/planned through the existing cinematic contracts. There is no new standalone CLI command.

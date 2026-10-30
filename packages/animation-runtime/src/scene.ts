@@ -47,21 +47,34 @@ export const sceneSchema = z
     });
   });
 const track = timelineSchema.shape.tracks.element;
-const cameraStateSchema = z.object({
-  x: scalar, y: scalar, zoom: scalar.positive(),
-}).strict();
-const cameraShotSchema = z.object({
-  startFrame: z.number().int().min(0),
-  endFrame: z.number().int().positive(),
-  from: cameraStateSchema,
-  to: cameraStateSchema.optional(),
-}).strict();
+const cameraStateSchema = z
+  .object({
+    x: scalar,
+    y: scalar,
+    zoom: scalar.positive(),
+  })
+  .strict();
+const cameraShotSchema = z
+  .object({
+    startFrame: z.number().int().min(0),
+    endFrame: z.number().int().positive(),
+    from: cameraStateSchema,
+    to: cameraStateSchema.optional(),
+  })
+  .strict();
 export type CameraShot = z.infer<typeof cameraShotSchema>;
 export function evaluateCamera(shots: CameraShot[] | undefined, frame: number) {
-  const shot = shots?.find(s => frame >= s.startFrame && frame < s.endFrame);
+  const shot = shots?.find((s) => frame >= s.startFrame && frame < s.endFrame);
   if (!shot) return {x: 640, y: 360, zoom: 1};
   const end = shot.to ?? shot.from;
-  const progress = Math.max(0, Math.min(1, (frame - shot.startFrame) / Math.max(1, shot.endFrame - shot.startFrame - 1)));
+  const progress = Math.max(
+    0,
+    Math.min(
+      1,
+      (frame - shot.startFrame) /
+        Math.max(1, shot.endFrame - shot.startFrame - 1),
+    ),
+  );
   return {
     x: shot.from.x + (end.x - shot.from.x) * progress,
     y: shot.from.y + (end.y - shot.from.y) * progress,
@@ -86,18 +99,32 @@ export const sceneTimelineSchema = z
   .strict()
   .superRefine((timeline, ctx) => {
     if (timeline.camera) {
-    const shots = timeline.camera.shots;
-    const frames = timeline.fps * timeline.duration;
-    let cursor = 0;
-    for (const [i, shot] of shots.entries()) {
-      if (shot.startFrame !== cursor || shot.endFrame <= shot.startFrame || shot.endFrame > frames) {
-        ctx.addIssue({code: 'custom', path: ['camera', 'shots', i], message: 'Camera shots must be contiguous, ordered and within timeline'});
+      const shots = timeline.camera.shots;
+      const frames = timeline.fps * timeline.duration;
+      let cursor = 0;
+      for (const [i, shot] of shots.entries()) {
+        if (
+          shot.startFrame !== cursor ||
+          shot.endFrame <= shot.startFrame ||
+          shot.endFrame > frames
+        ) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['camera', 'shots', i],
+            message:
+              'Camera shots must be contiguous, ordered and within timeline',
+          });
+        }
+        cursor = shot.endFrame;
       }
-      cursor = shot.endFrame;
+      if (cursor !== frames)
+        ctx.addIssue({
+          code: 'custom',
+          path: ['camera', 'shots'],
+          message: 'Camera shots must cover all frames',
+        });
     }
-    if (cursor !== frames) ctx.addIssue({code: 'custom', path: ['camera', 'shots'], message: 'Camera shots must cover all frames'});
-  }
-  const targets = new Map<string, string>();
+    const targets = new Map<string, string>();
     const tracks = timeline.tracks.map((t) => {
       const key = JSON.stringify([t.target.object, t.target.part ?? null]);
       if (!targets.has(key)) targets.set(key, `target${targets.size}`);

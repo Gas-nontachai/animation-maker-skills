@@ -1,4 +1,8 @@
-import {evaluateSceneFrame, evaluateCamera, type MultiSceneProps} from './scene';
+import {
+  evaluateSceneFrame,
+  evaluateCamera,
+  type MultiSceneProps,
+} from './scene';
 import type {Rig, Timeline} from './schemas';
 import {evaluateFrame} from './evaluate-frame';
 export type SceneProps = {
@@ -54,25 +58,27 @@ export function AnimationComposer(props: AnimationProps & {frame: number}) {
       viewBox="0 0 1280 720"
       style={{background: props.scene.background ?? 'transparent'}}
     >
-      <g transform={`translate(640 360) scale(${camera.zoom}) translate(${-camera.x} ${-camera.y})`}>
-      {objects.map((object) => (
-        <g
-          key={object.id}
-          transform={`matrix(${object.matrix.join(' ')})`}
-          opacity={object.opacity}
-        >
-          {object.parts.map((part) => (
-            <g
-              key={part.id}
-              transform={`matrix(${part.matrix.join(' ')})`}
-              opacity={part.opacity}
-              dangerouslySetInnerHTML={{
-                __html: props.assets[object.rig][part.id],
-              }}
-            />
-          ))}
-        </g>
-      ))}
+      <g
+        transform={`translate(640 360) scale(${camera.zoom}) translate(${-camera.x} ${-camera.y})`}
+      >
+        {objects.map((object) => (
+          <g
+            key={object.id}
+            transform={`matrix(${object.matrix.join(' ')})`}
+            opacity={object.opacity}
+          >
+            {object.parts.map((part) => (
+              <g
+                key={part.id}
+                transform={`matrix(${part.matrix.join(' ')})`}
+                opacity={part.opacity}
+                dangerouslySetInnerHTML={{
+                  __html: props.assets[object.rig][part.id],
+                }}
+              />
+            ))}
+          </g>
+        ))}
       </g>
     </svg>
   );

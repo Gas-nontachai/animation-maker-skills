@@ -10,12 +10,23 @@ Example addition to a 48-frame (2 s at 24 fps) `timeline.json` scene:
 
 ```json
 {
-  "version": "1.0", "fps": 24, "duration": 2, "tracks": [],
+  "version": "1.0",
+  "fps": 24,
+  "duration": 2,
+  "tracks": [],
   "camera": {
     "shots": [
-      {"startFrame": 0, "endFrame": 24, "from": {"x": 640, "y": 360, "zoom": 1}},
-      {"startFrame": 24, "endFrame": 48, "from": {"x": 640, "y": 360, "zoom": 1.5},
-       "to": {"x": 520, "y": 300, "zoom": 2}}
+      {
+        "startFrame": 0,
+        "endFrame": 24,
+        "from": {"x": 640, "y": 360, "zoom": 1}
+      },
+      {
+        "startFrame": 24,
+        "endFrame": 48,
+        "from": {"x": 640, "y": 360, "zoom": 1.5},
+        "to": {"x": 520, "y": 300, "zoom": 2}
+      }
     ]
   }
 }
